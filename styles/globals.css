@@ -1,11 +1,45 @@
-@import 'tailwindcss';
+@import "tailwindcss";
+
+@theme {
+  --font-outfit: var(--font-outfit);
+  --font-inter: var(--font-inter);
+  --color-primary: #1654A5;
+  --color-secondary: #D0DCED;
+  --color-tertiary:#73034F ;
+}
+
+@utility primary {
+  color: var(--color-primary);
+}
+@utility secondary {
+  color: var(--color-secondary);
+}
+@utility tertiary {
+  color: var(--color-tertiary);
+}
+/* Optional: add font utility aliases */
+@utility font-headings {
+  font-family: var(--font-outfit);
+}
+
+@utility font-main {
+  font-family: var(--font-inter);
+}
 
 @layer base {
-  html, body {
-    @apply bg-pink-300 text-gray-900 antialiased;
+  html {
+    @apply scroll-smooth;
   }
 
-  h1, h2, h3, h4 {
-    @apply  text-gray-800;
+  body {
+    @apply   text-gray-900  antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply  text-gray-800 font-headings tracking-tight;
+  }
+
+  a {
+    @apply  transition-colors;
   }
 }
