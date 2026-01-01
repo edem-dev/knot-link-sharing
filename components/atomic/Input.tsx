@@ -3,7 +3,8 @@ import React from 'react';
 interface InputProps {
     value: string;
     onChange: (value: string)=>void;
-    type?: 'text' | 'password'|'email'|'number';
+    type?: 'text' | 'password'|'email'|'number'|'checkbox';
+    checked?: boolean;
     placeholder?: string;
     disabled?: boolean;
     required?: boolean;
@@ -11,6 +12,7 @@ interface InputProps {
     error?: string;
     variant?: 'outline'| 'filled';
     width?: string;
+    autoComplete?: 'on'|'off';
 }
 
 const base = `py-2 px-4 rounded-md`
@@ -30,20 +32,24 @@ const Input:React.FC<InputProps> = (
         label,
         error,
         variant = 'outline',
-        width
+        width,
+        checked,
+        autoComplete="off"
     }
 ) => {
     return (
-        <div className={"flex flex-col"}>
-            {label && <label>{label}</label>}
+        <div className={"flex flex-col my-4"}>
+            {label && <label className={"font-body"}>{label}</label>}
             <input
+                autoComplete={autoComplete}
+                checked={checked}
                 type={type}
                 value={value}
                 onChange={(e)=>onChange(e.target.value)}
                 placeholder={placeholder}
                 disabled={disabled}
                 required={required}
-                className={`${base} ${width} ${variants[variant]} ${error ? 'border-red-500' : ''} ${disabled ? 'opacity-50 cursor-not-allowed' : ''} focus:outline-2 outline-gray-300`}
+                className={`${base} ${width} ${variants[variant]} ${error ? 'border-red-500' : ''} ${disabled ? 'opacity-50 cursor-not-allowed' : ''} focus:outline-2 outline-gray-300 `}
             />
             {error && <p className={"text-red-500"}>{error}</p>}
         </div>

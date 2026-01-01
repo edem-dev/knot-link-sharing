@@ -7,14 +7,16 @@ interface ButtonProps {
     onClick?: ()=>void;
     disabled?: boolean;
     loading?: boolean;
-    variant?: 'primary' | 'secondary'|'danger'|'ghost'|'link';
+    variant?: 'primary' | 'secondary'|'danger'|'ghost'|'link'|'outlined';
     size? :'small' | 'medium' | 'large';
+    wholeWidth?: boolean;
 }
 
-const base = `py-2 px-4 rounded-md`
+const base = `py-2 px-4 rounded-md font-body`
 
 const variants = {
-    primary: 'bg-[#4B46E4] text-white',
+    outlined: 'border border-gray-300 hover:border-primary-500',
+    primary: 'bg-primary text-white',
     secondary: 'bg-[#E5E5E5] text-gray-700',
     danger: 'bg-[#F40000] text-white',
     ghost: 'bg-transparent text-primary-500 hover:text-primary-600',
@@ -36,15 +38,19 @@ const Button:React.FC<ButtonProps> = (
         disabled = false,
         loading = false,
         variant = 'primary',
-        size='small'
+        size='small',
+        wholeWidth = false
     }
 ) => {
     const className = `
     ${base} ${variants[variant]} ${sizes[size]}
+    ${wholeWidth ? 'w-full' : ''}
+ 
     ${disabled ? 'opacity-50 cursor-not-allowed' : ''} 
     focus:outline-2 hover:bg-opacity-75 transition-all duration-200
      hover:-translate-y-[2px] hover
      flex items-center justify-center
+     my-4
      `
 
     return (
