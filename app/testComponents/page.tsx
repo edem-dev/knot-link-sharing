@@ -10,6 +10,10 @@ import Badge from "@/components/atomic/Badge";
 import Switch from "@/components/atomic/Switch";
 import TabsTrigger from "@/components/atomic/tabsTrigger";
 import TabsContent from "@/components/atomic/tabsContent";
+import PhoneWrapper from "@/components/molecular/PhoneWrapper";
+import UserProfile from "@/components/sectional/UserProfile";
+import SocialMediaLinks from "@/components/molecular/SocialMediaLinks";
+import {Instagram} from "lucide-react";
 
 const page = () => {
 
@@ -187,7 +191,21 @@ const page = () => {
             <TabsContent value={"analytics"} activeTab={activeTab}>
                 Notifications content goes here
             </TabsContent>
-
+            Phone wrapper is tested here
+            <div>
+                <PhoneWrapper>
+                    <UserProfile/>
+                </PhoneWrapper>
+            </div>
+            <h2 className={'mt-10'}>SocialMediaLinks component is tested here</h2>
+            <div className="w-1/2">
+                <SocialMediaLinks
+                    icon={<Instagram size={20}/>}
+                    value="@janedoe_design"
+                    onEdit={() => console.log("Edit clicked")}
+                    onDelete={() => console.log("Delete clicked")}
+                />
+            </div>
         </div>
     );
 };

@@ -13,9 +13,9 @@ interface IconButtonProps {
 
 const variants = {
     primary: 'bg-[#4B46E4] text-white',
-    secondary: 'bg-[#E5E5E5] text-gray-700',
+    secondary: 'bg-[#E5E5E5] text-primary',
     danger: 'bg-[#F40000] text-white',
-    ghost: 'bg-transparent text-primary-500 hover:text-primary-600',
+    ghost: 'bg-transparent text-gray-500 hover:bg-gray-200',
     link: 'text-primary-500 hover:text-primary-600'
 }
 const sizes = {

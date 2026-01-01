@@ -4,13 +4,15 @@ interface TabsContentProps {
     value:string;
     activeTab:string;
     children:React.ReactNode;
+    bordered?:boolean;
 }
 
 const tabsContent:React.FC<TabsContentProps> = (
     {
         value,
         activeTab,
-        children
+        children,
+        bordered = true
     }
 ) => {
     if(value !== activeTab) return null;
@@ -18,7 +20,7 @@ const tabsContent:React.FC<TabsContentProps> = (
     return (
         <div
         role={"tabpanel"}
-        className={" p-4 text-sm text-gray-700 border-t border-gray-200 "}
+        className={`  text-sm text-gray-700 ${bordered?"border-t border-gray-200 ":""}`}
         >
             {children}
         </div>
