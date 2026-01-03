@@ -33,7 +33,7 @@ const LinkDisplaySettings = () => {
                                 <label key={option.id} className="flex items-center cursor-pointer group">
                                     <div className="relative flex items-center justify-center">
                                         <input
-                                            type="checkbox"
+                                            type="radio"
                                             name="linkStyle"
                                             value={option.id}
                                             checked={linkStyle === option.id}

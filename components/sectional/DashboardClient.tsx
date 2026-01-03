@@ -12,7 +12,7 @@ const DashboardClient = () => {
 
     return (
         <section className="w-full">
-            <div className="w-full flex flex-row justify-between items-center sticky top-0 bg-white border-b">
+            <div className="w-full flex flex-row justify-between items-center sticky top-0 bg-white ">
                 {/*Tabs trigger*/}
                 <TabsTrigger value={"dashboard"} onChange={setActiveTab} activeTab={activeTab} className="flex-1">
                     Dashboard
