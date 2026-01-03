@@ -16,7 +16,7 @@ const AnalyticsProgress: React.FC<AnalyticsProgressProps> = (
 ) => {
     return (
         <div
-            className={`${borderBottom? "border-b border-gray-800":""} flex flex-col gap-2 md:flex-row items-center justify-between py-4`}
+            className={`${borderBottom? "border-b border-gray-100":""} flex flex-col gap-2 md:flex-row items-center justify-between py-4`}
         >
             {/* Link Name */}
             <div className="font-body w-full text-sm font-bold">

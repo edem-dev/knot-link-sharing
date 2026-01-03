@@ -9,6 +9,7 @@ interface IconButtonProps {
     size?: 'small' | 'medium' | 'large';
     variant?: 'primary' | 'secondary'|'danger'|'ghost'|'link';
     shape?: 'circle' | 'square';
+    className?: string;
 }
 
 const variants = {
@@ -37,12 +38,13 @@ const IconButton:React.FC<IconButtonProps> = (
         ariaLabel,
         size='small',
         variant = 'primary',
-        shape='circle'
+        shape='circle',
+        className
     }
 ) => {
     return (
         <div
-            className={`flex justify-center items-center
+            className={`flex justify-center items-center ${className}
               ${variants[variant]} ${sizes[size]} ${shapes[shape]} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
             onClick={onClick}
             aria-label={ariaLabel}
