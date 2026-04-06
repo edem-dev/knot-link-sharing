@@ -1,36 +1,22 @@
-import type { Metadata } from "next";
-import { Lato, Inter } from "next/font/google";
+// app/layout.tsx
 import "./globals.css";
+import React from 'react';
+import { ClerkProvider } from '@clerk/nextjs';
 
-const latoSans = Lato({
-    variable: "--font-lato",
-    subsets: ["latin"],
-    weight: ["100", "300", "400", "700", "900"], // Available weights for Lato
-});
-
-const inter = Inter({
-    variable: "--font-inter",
-    subsets: ["latin"],
-    weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"], // Available weights for Inter
-});
-
-export const metadata: Metadata = {
-  title: "Knotted",
-  description: "all your digital environment in one place",
-};
-
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
-  return (
-    <html lang="en">
-      <body
-        className={`${latoSans.variable} ${inter.variable} antialiased`}
-      >
-        {children}
-      </body>
-    </html>
-  );
+interface LayoutProps {
+    children: React.ReactNode;
 }
+
+
+
+const RootLayout: React.FC<LayoutProps> = ({ children }) => {
+    return (
+        <ClerkProvider>
+            <html lang="en">
+                <body>{children}</body>
+            </html>
+        </ClerkProvider>
+    );
+}
+
+export default RootLayout;

@@ -1,76 +1,130 @@
-import React from 'react';
+"use client";
+
+import React from "react";
 import Image from "next/image";
+import {Pencil} from "lucide-react";
 
+const getInitials = (name: string): string => {
+  if (!name?.trim()) return "";
 
-interface AvatarProps {
-    src?: string;
-    name: string;
-    size?: 'sm' | 'md' | 'lg' | 'xl';
-    className?: string;
-    alt?: string;
-    ariaLabel?: string;
-    onClick?: () => void;
+  const parts  = name.trim().split(/\s+/);
+  const first  = parts[0];
+  const last   = parts[parts.length - 1];
+
+  const raw = parts.length === 1 ? first[0] : first[0] + last[0];
+  return raw.toUpperCase();
+};
+
+const SIZES = {
+  sm: {px: 32, text: "text-xs"},
+  md: {px: 40, text: "text-sm"},
+  lg: {px: 56, text: "text-base"},
+  xl: {px: 80, text: "text-lg"},
+} as const;
+
+type AvatarSize = keyof typeof SIZES;
+
+export interface AvatarProps {
+  src?: string;
+  name: string;
+  size?: AvatarSize;
+  className?: string;
+  alt?: string;
+  ariaLabel?: string;
+  onClick?: () => void;
+  editable?: boolean;
+  onEdit?: () => void;
 }
 
-const getInitials = (name: string) => {
-    if (!name) return '';
+const Avatar: React.FC<AvatarProps> = ({
+  src,
+  name,
+  size      = "md",
+  className = "",
+  alt,
+  ariaLabel,
+  onClick,
+  editable  = false,
+  onEdit,
+}) => {
 
-    return name
-        .trim()
-        .split(/\s+/)
-        .map(word => word[0])
-        .join('')
-        .toUpperCase();
-};
+  const initials = getInitials(name);
+  const config = SIZES[size];
 
-const sizes = {
-    sm: 'h-8 w-8 text-xs',
-    md: 'h-10 w-10 text-sm',
-    lg: 'h-12 w-12 text-base',
-    xl: 'h-30 w-30 text-lg',
-};
+  return (
+      <div
+          style={{
+        width:  config.px,
+        height: config.px,
+        flexShrink: 0,
+      }}
+      className={[
+        "relative inline-block select-none",
+        onClick
+          ? "cursor-pointer hover:opacity-90 transition-opacity duration-150"
+          : "",
+        className,
+      ].join(" ")}
+      role={onClick ? "button" : undefined}
+      aria-label={ariaLabel || name}
+      tabIndex={onClick ? 0 : undefined}
+      onClick={onClick}
+    >
+      <div
+        className={[
+          "w-full h-full",
+          "flex items-center justify-center rounded-full overflow-hidden",
+          "ring-2 ring-white dark:ring-slate-800",
+          "shadow-md",
+        ].join(" ")}
+      >
+        {src ? (
+          <Image
+            src={src}
+            alt={alt || name}
+            width={config.px}
+            height={config.px}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div
+            className={[
+              "w-full h-full",
+              "flex items-center justify-center",
+              "bg-gradient-to-br from-brand-500 to-brand-700",
+              "text-white font-display font-bold tracking-wide",
+              config.text,
+            ].join(" ")}
+            aria-hidden="true"
+          >
+            {initials}
+          </div>
+        )}
+      </div>
 
-const Avatar: React.FC<AvatarProps> = (
-    {
-        src,
-        name,
-        size = 'md',
-        className = '',
-        alt,
-        ariaLabel,
-        onClick,
-    }) => {
-    const initials = getInitials(name);
-
-    return (
-        <div
-            className={`
-        inline-flex items-center justify-center
-        rounded-full overflow-hidden
-        ${sizes[size]}
-        ${onClick ? 'cursor-pointer' : ''}
-        ${className}
-      `}
-            onClick={onClick}
-            role={onClick ? 'button' : undefined}
-            aria-label={ariaLabel || name}
-            tabIndex={onClick ? 0 : undefined}
+        {editable && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit?.();
+          }}
+          aria-label="Edit profile photo"
+          className={[
+            "absolute -bottom-0.5 -right-0.5",
+            "w-6 h-6 rounded-full",
+            "bg-brand-600 hover:bg-brand-700",
+            "text-white flex items-center justify-center",
+            "shadow-sm transition-colors duration-150 border border-white dark:border-slate-800",
+            "focus-visible:outline-none focus-visible:ring-2",
+            "focus-visible:ring-brand-600 focus-visible:ring-offset-1",
+          ].join(" ")}
         >
-            {src ? (
-                <Image
-                    width={10}
-                    height={10}
-                    src={src}
-                    alt={alt || name}
-                    className="h-full w-full object-cover"
-                />
-            ) : (
-                <span className=" flex h-full w-full items-center justify-center border-2 border-blue-300 bg-gray-200 font-medium rounded-full">
-          {initials}
-        </span>
-            )}
-        </div>
-    );
+          <Pencil className="w-3 h-3" aria-hidden="true" />
+        </button>
+      )}
+    </div>
+  );
 };
 
 export default Avatar;
