@@ -1,14 +1,15 @@
 import React from 'react';
+import {Icon} from "lucide-react";
 
 export interface FeatureCardProps {
-    icon:React.ReactNode;
+    icon:React.ElementType;
     title:string;
     description:string;
     className?:string;
 }
 
 const FeatureCard:React.FC<FeatureCardProps> = ({
-    icon,
+    icon:Icon,
     title,
     description,
     className = "",
@@ -36,7 +37,7 @@ const FeatureCard:React.FC<FeatureCardProps> = ({
                     // This sizes the lucide icon without the caller needing to pass a className.
                 ].join(" ")}
             >
-                {icon}
+                <Icon aria-hidden="true" className="w-6 h-6" />
             </div>
             <h3 className="font-display font-bold text-slate-900 dark:text-white text-base mb-1.5">
                 {title}

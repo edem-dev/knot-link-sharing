@@ -8,6 +8,7 @@ export type BadgeSize = "sm" | "md" | "lg";
 export interface BadgeProps extends React.HTMLAttributes<HTMLDivElement> {
     variant?:BadgeVariant;
     size?:BadgeSize;
+    withDot?:boolean;
 }
 
 
@@ -16,6 +17,7 @@ const Badge:React.FC<BadgeProps> = (
         children,
         variant = "success",
         size = "md",
+        withDot = false,
     }
 ) => {
 
@@ -36,7 +38,16 @@ const Badge:React.FC<BadgeProps> = (
     }
 
     return (
-        <div className={`${variantCLasses[variant]} ${base} ${sizeClasses[size]}`}>{children}</div>
+        <div className={`flex items-center  gap-1 ${variantCLasses[variant]} ${base} ${sizeClasses[size]}`}>
+            {withDot && (
+                <span
+                    className="w-1.5 h-1.5  rounded-full bg-current animate-pulse"
+                    aria-hidden="true"
+                />
+            )}
+
+            {children}
+        </div>
     );
 };
 

@@ -149,7 +149,7 @@ const AddLinkModal:React.FC<AddLinkModalProps> = (
                         value={title}
                         onChange={(e)=>{
                             setTitle(e.target.value)
-                        //     Clear the error as soon as the user starts typing.UX trick
+                        //     Clear the error as soon as the [userPublic] starts typing.UX trick
                             if (titleError) setTitleError("")
                         }}
                         placeholder={"My Youtube channel"}

@@ -4,10 +4,10 @@ import React from "react";
 import Image from "next/image";
 import {Pencil} from "lucide-react";
 
-const getInitials = (name: string): string => {
+const getInitials = (name?: string): string => {
   if (!name?.trim()) return "";
 
-  const parts  = name.trim().split(/\s+/);
+  const parts  = name?.trim().split(/\s+/);
   const first  = parts[0];
   const last   = parts[parts.length - 1];
 
@@ -20,13 +20,14 @@ const SIZES = {
   md: {px: 40, text: "text-sm"},
   lg: {px: 56, text: "text-base"},
   xl: {px: 80, text: "text-lg"},
+  "2xl": {px: 104, text: "text-xl"},
 } as const;
 
 type AvatarSize = keyof typeof SIZES;
 
 export interface AvatarProps {
   src?: string;
-  name: string;
+  name?: string;
   size?: AvatarSize;
   className?: string;
   alt?: string;
@@ -81,7 +82,7 @@ const Avatar: React.FC<AvatarProps> = ({
         {src ? (
           <Image
             src={src}
-            alt={alt || name}
+            alt={alt || name?.trim() || "User Avatar"}
             width={config.px}
             height={config.px}
             className="w-full h-full object-cover"

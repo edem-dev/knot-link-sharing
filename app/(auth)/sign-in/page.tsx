@@ -1,11 +1,11 @@
 import React from 'react';
-import {SignIn} from "@clerk/nextjs";
+import SignInPage from "@/components/sectional/AuthSections/SignInPage";
 
 const page = () => {
     return (
-        <main style={{ display: "flex", justifyContent: "center", padding: "4rem 0" }}>
-            <SignIn />
-        </main>
+        <>
+            <SignInPage/>
+        </>
     );
 };
 

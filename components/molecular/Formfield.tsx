@@ -21,7 +21,7 @@ const FormField:React.FC<FormFieldProps> = ({
     className,
 }) => {
     return (
-        <div className={`flex flex-col gap-1.5 ${className}`}>
+        <div className={`flex flex-col gap-2 ${className}`}>
         {/*    Label row*/}
             <div className="flex items-center justify-between">
             <label
@@ -37,7 +37,7 @@ const FormField:React.FC<FormFieldProps> = ({
         {/*    Helper text + error message*/}
             {helperText && (
               <p
-                className={`text-xs font-body 
+                className={`text-xs  font-body 
                     ${isError ?
                         "text-red-500" 
                             :"text-slate-400 dark:text-slate-500"}

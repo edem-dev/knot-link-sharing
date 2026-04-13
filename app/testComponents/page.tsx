@@ -13,11 +13,12 @@ import {
     Palette,
     Globe,
     Youtube,
-    LayoutDashboard
+    LayoutDashboard, Heart, Share2, QrCode
 } from "lucide-react";
 import Textarea from "@/components/atomic/Textarea";
 import Avatar from "@/components/atomic/Avatar";
-import fresh from "@/public/Image/frresh.jpg"
+import fresh from "@/public/Image/av-1.jpg"
+
 import Divider from "@/components/atomic/Divider";
 import StatusIndicator from "@/components/atomic/StatusIndicator";
 import Modal from "@/components/atomic/Modal";
@@ -28,6 +29,15 @@ import NavLink from "@/components/molecular/NavLink";
 import FeatureCard from "@/components/molecular/FeatureCard";
 import PublicLinkItem from "@/components/molecular/PublicLinkItem";
 import SidebarNavItem from "@/components/molecular/SidebarNavItem";
+import KnottedLogo from "@/components/atomic/KnottedLogo";
+import LandingNavBar from "@/components/sectional/LandingSections/LandingNavBar";
+import GoogleIcon from "@/components/atomic/GoogleIcon";
+import SocialProof from "@/components/molecular/SocialProof";
+import StatBar from "@/components/molecular/StatBar";
+import UserSidebarProfile from "@/components/molecular/UserSidebarProfile";
+import PageUrlBanner from "@/components/molecular/PageURLBanner";
+
+
 
 const page = () => {
 
@@ -53,13 +63,18 @@ const page = () => {
 
     return (
         <div className={"p-6"}>
+
+            <div>
+                <KnottedLogo size={"sm"} logoText  asLink={true}/>
+                <GoogleIcon/>
+            </div>
             <div className={"flex gap-2 m-4"}>
                 <Button variant={"secondary"}> Get started</Button>
                 <Button variant={"dark"}> Get started</Button>
                 <Button loading={true} variant={"danger"}> Get started</Button>
             </div>
             <div className={'flex gap-2 m-4'}>
-                <Badge variant={"success"}>Success</Badge>
+                <Badge withDot={true} variant={"success"}>Success</Badge>
                 <Badge variant={"info"}>Done</Badge>
                 <Badge variant={"warning"}>Warning</Badge>
                 <Badge variant={"danger"}>Danger</Badge>
@@ -164,7 +179,7 @@ const page = () => {
             {/*    Form Field*/}
                 <div>
                     <FormField label="Email Address" htmlFor="email">
-                        <Input id="email" type="email" />
+                        <Input  id="email" type="email" />
                     </FormField>
 
                     <FormField
@@ -184,7 +199,7 @@ const page = () => {
                        <Textarea id="bio" maxLength={160} currentLength={bio.length} />
                     </FormField>
 
-                   {/*Username onboarding:*/}
+                   {/*Username (onboarding):*/}
                      <FormField label="Claim your unique link" htmlFor="username">
                        <Input id="username" prefix="knotted.com/" />
                      </FormField>
@@ -209,21 +224,21 @@ const page = () => {
                 </div>
             {/*    Featurecards*/}
                 <div className={"flex justify-center items-center flex-row shrink-0 gap-2"}>
-                    <FeatureCard
-                         icon={<AtSign className="w-6 h-6" />}
-                         title="Custom username"
-                         description="Claim your unique URL in seconds."
-                    />
-                    <FeatureCard
-                        icon={<ShareIcon className={"w-6 h-6"}/>}
-                        title={"One-click sharing"}
-                        description={"Share your profile across all platforms easily"}
-                    />
-                    <FeatureCard
-                        icon={<Palette className={"w-6 h-6"}/>}
-                        title={"One-click sharing"}
-                        description={"Share your profile across all platforms easily"}
-                    />
+                    {/*<FeatureCard*/}
+                    {/*     icon={<AtSign className="w-6 h-6" />}*/}
+                    {/*     title="Custom username"*/}
+                    {/*     description="Claim your unique URL in seconds."*/}
+                    {/*/>*/}
+                    {/*<FeatureCard*/}
+                    {/*    icon={<ShareIcon className={"w-6 h-6"}/>}*/}
+                    {/*    title={"One-click sharing"}*/}
+                    {/*    description={"Share your profile across all platforms easily"}*/}
+                    {/*/>*/}
+                    {/*<FeatureCard*/}
+                    {/*    icon={<Palette className={"w-6 h-6"}/>}*/}
+                    {/*    title={"One-click sharing"}*/}
+                    {/*    description={"Share your profile across all platforms easily"}*/}
+                    {/*/>*/}
                 </div>
                 {/*Public link item*/}
                 <div className={"flex flex-col gap-4"}>
@@ -259,6 +274,59 @@ const page = () => {
                 </div>
             </section>
 
+            <LandingNavBar/>
+
+        {/*
+        import av1 from "@/public/Image/av-1.jpg"
+        import av2 from "@/public/Image/av-2.png"
+        import av3 from "@/public/Image/av-3.png"
+        import av4 from "@/public/Image/av-4.png"
+        */}
+
+        {/*    Social Proof*/}
+            <SocialProof
+                avatars={[
+                    "/Image/av-2.png",
+                    "/Image/av-3.png",
+                    "/Image/av-4.png",
+                ]}
+                count="10,000+"
+                label="sharing their best work"
+                className="mt-12"
+            />
+
+            <StatBar
+                className="mb-8"
+                stats={[
+                    {
+                        icon:  <Heart  className="w-5 h-5" />,
+                        count: 200,
+                        label: 'likes',
+                    },
+                    {
+                        icon:  <Share2 className="w-5 h-5" />,
+                        count: 25,
+                        label: 'shares',
+                    },
+                    {
+                        icon:  <QrCode className="w-5 h-5" />,
+                        count: 'QR',
+                        label: 'QR code',
+                        // onClick would open a QR code modal — wired up by the parent
+                    },
+                ]}
+            />
+            <UserSidebarProfile
+                 name="Alex Rivers"
+                 role="Knotted Creator"
+                 avatarSrc="/Image/av-2.png"
+            />
+
+            <PageUrlBanner
+                 url="knotted.to/alexrivers"
+                 subLabel="Share your link with your audience"
+                 // onCopy={() => analytics.track('url_copied')}
+            />
         </div>
     );
 };
