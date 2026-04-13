@@ -22,7 +22,7 @@ export interface EditableLinkRowProps {
     link: LinkRowData;
 
     /**
-     * Called every time the user changes the title OR URL input.
+     * Called every time the [userPublic] changes the title OR URL input.
      *
      * NEW TYPESCRIPT: A callback that receives TWO typed arguments.
      *

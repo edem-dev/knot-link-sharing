@@ -1,11 +1,8 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600&display=swap');
 @import "tailwindcss";
 
-/* Temporarily remove Google Fonts to rule out render blocking */
-
 @theme {
-  --font-display: 'Plus Jakarta Sans', sans-serif;
-  --font-body: 'DM Sans', sans-serif;
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
 
   --color-brand-50: #F5F3FF;
   --color-brand-100: #EDE9FE;
@@ -18,7 +15,6 @@
   --color-brand-800: #5B21B6;
   --color-brand-900: #4C1D95;
   --color-brand-950: #2E1065;
-  --color-error: #EF4444;
 }
 
 @variant dark (&:where(.dark, .dark *));

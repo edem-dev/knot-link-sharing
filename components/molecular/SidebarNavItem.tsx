@@ -14,6 +14,7 @@ export interface SidebarNavItemProps {
      * When false → muted text that darkens on hover
      */
     active?: boolean;
+    onClick?: () => void;
     className?: string;
 }
 
@@ -21,11 +22,18 @@ export const SidebarNavItem: React.FC<SidebarNavItemProps> = ({
         icon,
         label,
         href,
+        onClick,
         active = false,
         className = '',
     }) => (
     <a
         href={href}
+        onClick={(e)=>{
+            if (onClick) {
+                e.preventDefault();
+                onClick();
+            }
+        }}
         aria-current={active ? 'page' : undefined}
         className={[
             'flex items-center gap-3 px-4 py-2.5 rounded-2xl',
