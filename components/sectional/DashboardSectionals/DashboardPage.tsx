@@ -34,6 +34,9 @@ import {
 } from "lucide-react";
 import PageURLBanner from "@/components/molecular/PageURLBanner";
 
+//==================Clerk Sin out import===========================//
+import { useClerk } from '@clerk/nextjs'
+
 //Nav Items --------------------------------------------------------------//
 const NAV_ITEMS = [
     { href: '/dashboard', label: 'Dashboard',    Icon: LayoutDashboard },
@@ -630,6 +633,12 @@ const DashboardPage:React.FC<DashboardPageProps> = ({
     className = '',
 }) => {
 
+    const { signOut } = useClerk();
+
+    const handleSignOut = useCallback(() => {
+        signOut({ redirectUrl: '/' });
+    }, [signOut]);
+
     //================== Active Panel State==========================//
     const [activePath, setActivePath] = useState<NavHref>("/dashboard")
 
@@ -755,7 +764,7 @@ const DashboardPage:React.FC<DashboardPageProps> = ({
                 onNavChange={(href) => setActivePath(href as NavHref)}
                 // `as NavHref` — DashboardSidebar types onNavChange as (href: string) => void.
                 // We assert it as NavHref because we know only NAV_ITEMS hrefs are passed.
-                onSignOut={() => { /* TODO: call signOut() from your auth library */ }}
+                onSignOut={handleSignOut}
             />
 
         {/*=======================Main Content===============================*/}

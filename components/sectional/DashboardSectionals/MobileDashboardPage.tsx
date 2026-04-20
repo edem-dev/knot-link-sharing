@@ -31,6 +31,9 @@ import Textarea from "@/components/atomic/Textarea";
 import { LinkRowData } from "@/components/molecular/EditableLinkRow";
 import { clsx } from 'clsx';
 
+// =======================Clerk Sign out====================//
+import { useClerk } from '@clerk/nextjs'
+
 // ================ Nav Items =============================//
 const NAV_ITEMS = [
     { href: '/dashboard', label: 'Dashboard',    Icon: LayoutDashboard },
@@ -356,6 +359,11 @@ const MobileDashboardPage: React.FC<DashboardPageProps> = ({
     // after the initial mount (using a `mounted` ref), and add `aria-hidden` +
     // `inert` + `visibility` toggling to fully remove the drawer from the
     // paint/accessibility tree when closed.
+
+    //========================Handle Sign out===========================//
+
+    const {signOut } = useClerk();
+
     const [drawerOpen, setDrawerOpen] = useState(false);
 
     //================Active Panel State==========================//
@@ -555,7 +563,7 @@ const MobileDashboardPage: React.FC<DashboardPageProps> = ({
                         variant="danger"
                         type="button"
                         fullWidth
-                        onClick={() => {/* TODO: call sign out api */}}
+                        onClick={() => signOut({ redirectUrl: '/' })}
                         leftIcon={<LogOut className="w-4 h-4" aria-hidden="true" />}
                     >
                         Sign Out
