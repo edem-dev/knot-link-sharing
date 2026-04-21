@@ -85,7 +85,7 @@ const UsernameOnboardingPage:React.FC<UsernameOnboardingPageProps> = ({
     //Form Submit Handler ---------------------------------------->
     const handleSubmit = (e:React.FormEvent<HTMLFormElement>) =>{
         e.preventDefault();
-    //     Guard the submission-> If the username is available, then proceed.
+    //     Guard the submission-> If the [getUsername] is available, then proceed.
         if (availability !== 'available') return;
          onClaim?.(username);
     };
@@ -98,11 +98,11 @@ const UsernameOnboardingPage:React.FC<UsernameOnboardingPageProps> = ({
         variant: 'success' | 'error';
     }>> = {
         available: {
-            message: 'This username is available!',
+            message: 'This [getUsername] is available!',
             variant: 'success',
         },
         taken: {
-            message: 'That username is already taken.',
+            message: 'That [getUsername] is already taken.',
             variant: 'error',
         },
     };

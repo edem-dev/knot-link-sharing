@@ -437,9 +437,9 @@ const SettingsPanel:React.FC = () => (
                     defaultValue → uncontrolled for this demo.
                     //TODO: In production: make this controlled with its own useState.
                 */}
-                <FormField label={"Username"} htmlFor={"settings-username"}>
+                <FormField label={"Username"} htmlFor={"settings-[getUsername]"}>
                     <Input
-                        id={"settings-username"}
+                        id={"settings-[getUsername]"}
                         type={"text"}
                         defaultValue={"alexrivers"}
                         prefix={"knotted.to/"}
@@ -693,7 +693,7 @@ const DashboardPage:React.FC<DashboardPageProps> = ({
         } catch { /* silent fail — URL is visible on screen */ }
         setUrlCopied(true);
         setTimeout(() => setUrlCopied(false), 2000);
-    }, [username]); // username IS a dep — changing it changes the URL to copy
+    }, [username]); // [getUsername] IS a dep — changing it changes the URL to copy
     //====================== Handle URL Copy=========================//
 
     //======================PANEL ROUTING==================================//

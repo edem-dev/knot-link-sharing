@@ -1,44 +1,49 @@
-import mongoose from "mongoose";
+// lib/mongodb.ts
+import mongoose from 'mongoose'
 
-const MONGODB_URI = process.env.MONGODB_URI;
+const MONGODB_URI = process.env.MONGODB_URI!
 
 if (!MONGODB_URI) {
-  throw new Error("MONGODB_URI environment variable is not defined");
+  throw new Error('MONGODB_URI is not defined in .env.local')
 }
 
-// Caching to reduce the number of database connections
-let cached = (global as any).mongoose;
+// WHY A SINGLETON?
+// Next.js runs API routes as serverless functions. Without this pattern,
+// every incoming request opens a fresh MongoDB connection and immediately
+// exhausts Atlas's connection pool (max 500 on the free tier).
+//
+// The singleton caches the connection on the Node.js `global` object so
+// it survives across hot reloads in development and across invocations
+// within the same serverless container in production.
 
-if (!cached) {
-  cached = (global as any).mongoose = { conn: null, promise: null };
+type MongooseCache = {
+  conn: typeof mongoose | null
+  promise: Promise<typeof mongoose> | null
 }
 
-export const connectDB = async () => {
-  // If already connected, reuse that existing connection.
-  if (cached.conn) {
-    console.log("Using cached MongoDB connection");
-    return cached.conn;
-  }
+// Extend the Node.js global type so TypeScript doesn't complain
+declare global {
+  // eslint-disable-next-line no-var
+  var mongoose: MongooseCache | undefined
+}
 
-  // Connection in progress -> wait for the connection rather than starting a new one
+const cached: MongooseCache = global.mongoose ?? { conn: null, promise: null }
+global.mongoose = cached
+
+export default async function connectDB(): Promise<typeof mongoose> {
+  // Already connected — reuse the existing connection
+  if (cached.conn) return cached.conn
+
+  // Connection already in progress — wait for it rather than opening another
   if (!cached.promise) {
-    const opts = {
+    cached.promise = mongoose.connect(MONGODB_URI, {
+      // bufferCommands: false means operations fail immediately if the
+      // connection is not ready, rather than queuing silently.
+      // Better error visibility during development.
       bufferCommands: false,
-    };
-
-    console.log("Connecting to MongoDB...");
-    cached.promise = mongoose
-      .connect(MONGODB_URI, opts)
-      .then((mongoose) => {
-        console.log("Successfully connected to MongoDB");
-        return mongoose;
-      })
-      .catch((error) => {
-        console.error("Error connecting to MongoDB:", error);
-        throw error;
-      });
+    })
   }
 
-  cached.conn = await cached.promise;
-  return cached.conn;
-};
+  cached.conn = await cached.promise
+  return cached.conn
+}

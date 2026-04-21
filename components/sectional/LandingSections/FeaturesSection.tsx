@@ -10,7 +10,7 @@ export interface FeaturesSectionProps {
 const FEATURES = [
     {
         Icon:        AtSign,
-        title:       'Custom username',
+        title:       'Custom [getUsername]',
         description: 'Claim your unique URL in seconds. knotted.to/yourname is waiting for you.',
     },
     {
