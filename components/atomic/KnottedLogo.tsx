@@ -21,7 +21,7 @@ export interface KnottedLogoProps {
 // ─────────────────────────────────────────────────────────────
 
 // Image path from /public folder
-const LOGO_SRC = "/image/knotted-logo-icon.svg";
+const LOGO_SRC = "/Image/knotted-logo-icon.svg";
 
 // Locked brand text
 const LOGO_TEXT = "Knotted";
