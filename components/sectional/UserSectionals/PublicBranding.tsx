@@ -12,7 +12,7 @@ const PublicBranding = () => {
             <KnottedLogo  size={"sm"}/>
             <div className="flex gap-4 items-center justify-between bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700  rounded-full px-4 py-3">
 
-          <span className="text-xs font-display font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+          <span className="text-xs font-display font-semibold text-slate-500 dark:text-slate-400  tracking-wider">
             Create your own
           </span>
 
