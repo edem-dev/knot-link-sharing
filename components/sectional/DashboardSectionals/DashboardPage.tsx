@@ -450,7 +450,7 @@ const SettingsPanel:React.FC = () => (
                         id={"settings-[get-username]"}
                         type={"text"}
                         defaultValue={"alexrivers"}
-                        prefix={"knotted.to/"}
+                        prefix={"knottted.vercel.app/"}
                         placeholder={"yourname"}
                         autoComplete={"off"}
                         spellCheck={false}
@@ -544,7 +544,7 @@ const ViewPanel: React.FC<ViewPagePanelProps> = ({
                 </h2>
                 {/*=========================User's Public Link======================*/}
                 <Link
-                    href={`https://knotted.to/${username}`}
+                    href={`https://knottted.vercel.app/${username}`}
                     target={"_blank"}
                     rel={"noopener noreferrer"}
                     className={[
@@ -696,7 +696,7 @@ const DashboardPage:React.FC<DashboardPageProps> = ({
     //====================== Handle URL Copy=========================//
     const handleCopyUrl = useCallback(async () => {
         try {
-            await navigator.clipboard.writeText(`https://knotted.to/${username}`);
+            await navigator.clipboard.writeText(`https://knottted.vercel.app/${username}`);
         } catch { /* silent fail — URL is visible on screen */ }
         setUrlCopied(true);
         setTimeout(() => setUrlCopied(false), 2000);
@@ -798,7 +798,7 @@ const DashboardPage:React.FC<DashboardPageProps> = ({
                 {/* ===================Right Panel: URL Chip + Publish Button*/}
                     <div className={"flex items-center gap-2"}>
                         <PageURLBanner
-                            url={`knotted.to/${username}`}
+                            url={`knottted.vercel.app/${username}`}
                             subLabel="Share your link with your audience"
                             onCopy={handleCopyUrl}
                         />

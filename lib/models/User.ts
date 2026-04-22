@@ -43,7 +43,7 @@ const UserSchema = new Schema(
             lowercase: true,   // enforced at DB level — prevents case duplicates
             trim:      true,
             index:     true,   // indexed for fast lookup on the public profile page
-            // knotted.com/[get-username] — must be unique and URL-safe.
+            // knottted.vercel.app/[get-username] — must be unique and URL-safe.
             // Validated on creation: /^[a-z0-9_-]+$/
         },
 

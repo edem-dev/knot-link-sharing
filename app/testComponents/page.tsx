@@ -98,7 +98,7 @@ const page = () => {
                 />
                 <Input
                     id="username"
-                     prefix="knotted.com/"
+                     prefix="knottted.vercel.app/"
                      placeholder="yourname"
                      inputState="success"
                      trailingIcon={<CheckCircle2 className="w-4 h-4 text-brand-600" />}
@@ -323,7 +323,7 @@ const page = () => {
             />
 
             <PageUrlBanner
-                 url="knotted.to/alexrivers"
+                 url="knottted.vercel.app/alexrivers"
                  subLabel="Share your link with your audience"
                  // onCopy={() => analytics.track('url_copied')}
             />

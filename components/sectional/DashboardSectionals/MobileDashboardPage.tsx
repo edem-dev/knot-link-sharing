@@ -204,7 +204,7 @@ const SettingsPanel: React.FC = () => (
                         id="settings-username"
                         type="text"
                         defaultValue="alexrivers"
-                        prefix="knotted.to/"
+                        prefix="knottted.vercel.app/"
                         placeholder="yourname"
                         autoComplete="off"
                         spellCheck={false}
@@ -283,7 +283,7 @@ const ViewPanel: React.FC<ViewPagePanelProps> = ({ username, links, name, avatar
                     Your Public Page
                 </h2>
                 <Link
-                    href={`https://knotted.to/${username}`}
+                    href={`https://knottted.vercel.app/${username}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className={clsx(
@@ -660,7 +660,7 @@ const MobileDashboardPage: React.FC<DashboardPageProps> = (
                 aria-label="Main content area for mobile dashboard"
             >
                 <PageURLBanner
-                    url={`knotted.to/${username}`}
+                    url={`knottted.vercel.app/${username}`}
                     subLabel="Share your link with your audience"
                 />
 

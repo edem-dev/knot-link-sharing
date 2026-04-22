@@ -150,7 +150,7 @@ const UsernameOnboardingPage:React.FC<UsernameOnboardingPageProps> = ({
                     >
                         Your public URL will be{' '}
                         <span className={"font-medium text-brand-600 dark:text-brand-400"}>
-                            knotted.to/username
+                            knottted.vercel.app/username
                         </span>
                     </p>
                 </div>
@@ -168,7 +168,7 @@ const UsernameOnboardingPage:React.FC<UsernameOnboardingPageProps> = ({
                         <Input
                             id={"username"}
                             type={"text"}
-                            prefix={"knotted.to/"}
+                            prefix={"knottted.vercel.app/"}
                             placeholder={"yourname"}
                             autoComplete={"off"}
                             spellCheck={false}

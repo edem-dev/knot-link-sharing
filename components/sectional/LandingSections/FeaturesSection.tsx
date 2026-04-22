@@ -11,7 +11,7 @@ const FEATURES = [
     {
         Icon:        AtSign,
         title:       'Custom [get-username]',
-        description: 'Claim your unique URL in seconds. knotted.to/yourname is waiting for you.',
+        description: 'Claim your unique URL in seconds. knottted.vercel.app/yourname is waiting for you.',
     },
     {
         Icon:        Share2,
