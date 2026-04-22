@@ -1,7 +1,7 @@
 'use client';
 
 //====================Lucide React Imports=====================//
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 
 import {
     X, LogOut,
@@ -303,9 +303,9 @@ const ViewPanel: React.FC<ViewPagePanelProps> = ({ username, links, name, avatar
                 <h3 className="font-display font-extrabold text-xl text-slate-900 dark:text-white mb-1">
                     {name}
                 </h3>
-                <p className="font-display font-bold text-xs tracking-widest uppercase text-brand-600 dark:text-brand-400 mb-6">
-                    Knotted Creator
-                </p>
+                {/*<p className="font-display font-bold text-xs tracking-widest uppercase text-brand-600 dark:text-brand-400 mb-6">*/}
+                {/*    Knotted Creator*/}
+                {/*</p>*/}
 
                 <div className="w-full max-w-xs flex flex-col gap-2 px-4">
                     {links.length > 0
@@ -341,14 +341,18 @@ const ViewPanel: React.FC<ViewPagePanelProps> = ({ username, links, name, avatar
 //=============== Main Component: Mobile Dashboard Page =================//
 //=======================================================================//
 
-const MobileDashboardPage: React.FC<DashboardPageProps> = ({
-                                                               initialProfile = { name: 'Michael Kumah', bio: '', role: 'Knotted Creator', avatarSrc: '' },
-                                                               initialLinks = [],
-                                                               username = 'michaelkumah',
-                                                               onPublish,
-                                                               publishLoading,
-                                                               className = '',
-                                                           }) => {
+const MobileDashboardPage: React.FC<DashboardPageProps> = (
+    {
+        initialProfile = { name: 'Michael Kumah', bio: '', role: 'Knotted Creator', avatarSrc: '' },
+        initialLinks = [],
+        username = 'michaelkumah',
+        onPublish,
+        publishLoading,
+        className = '',
+        onAvatarEdit,
+        avatarUploading
+
+    }) => {
 
     //======================Drawer State==========================//
     // BUG FIX: Initial state was conceptually fine (false = closed), but the
@@ -386,6 +390,34 @@ const MobileDashboardPage: React.FC<DashboardPageProps> = ({
     const isMounted = useRef(false);
 
     //==================== useEffect==============================//
+
+    // 1. Add a `isDirty` derived value — true when local state differs from initial data.
+//    Add this AFTER your existing state declarations inside MobileDashboardPage:
+
+    const isDirty = useMemo(() => {
+        // Check if name or bio has changed from the initial values passed in
+        const profileChanged =
+            name !== initialProfile.name ||
+            bio  !== initialProfile.bio
+
+        // Check if links have changed — compare length first (fast), then content
+        const linksChanged =
+            links.length !== initialLinks.length ||
+            links.some((link, i) => {
+                const original = initialLinks[i]
+                return (
+                    !original ||
+                    link.title !== original.title ||
+                    link.url   !== original.url
+                )
+            })
+
+        return profileChanged || linksChanged
+    }, [name, bio, links, initialProfile, initialLinks])
+// useMemo re-computes only when these values change.
+// This is important on mobile — we don't want expensive comparisons
+// running on every render.
+
 
     // useEffect-1: Escape key closes the drawer
     useEffect(() => {
@@ -540,7 +572,7 @@ const MobileDashboardPage: React.FC<DashboardPageProps> = ({
 
                 <UserSidebarProfile
                     name={initialProfile.name}
-                    role={initialProfile.role ?? 'Knotted Creator'}
+                    role={initialProfile.role ?? 'Creator'}
                     avatarSrc={initialProfile.avatarSrc}
                     className="mb-6"
                 />
@@ -628,7 +660,7 @@ const MobileDashboardPage: React.FC<DashboardPageProps> = ({
                 aria-label="Main content area for mobile dashboard"
             >
                 <PageURLBanner
-                    url={`knotted.com/${username}`}
+                    url={`knotted.to/${username}`}
                     subLabel="Share your link with your audience"
                 />
 
@@ -649,7 +681,7 @@ const MobileDashboardPage: React.FC<DashboardPageProps> = ({
                                     src={initialProfile.avatarSrc}
                                     size="2xl"
                                     editable={true}
-                                    onEdit={() => {/* TODO: open EditProfileModal */}}
+                                    onEdit={onAvatarEdit}
                                 />
                             </div>
 
@@ -744,23 +776,79 @@ const MobileDashboardPage: React.FC<DashboardPageProps> = ({
             </main>
 
             {/*==============Sticky FAB========================*/}
+            {/*// 3. Replace the sticky FAB section with the dirty-aware version:*/}
+
+            {/* ── Sticky action area ───────────────────────────────────────────────── */}
             {showFab && (
-                <div
-                    className={clsx(
-                        'sticky bottom-0 px-4 pb-6 pt-3',
-                        'bg-gradient-to-t from-slate-100 dark:from-slate-950 to-transparent'
+                <div className="sticky bottom-0 px-4 pb-6 pt-3 bg-gradient-to-t from-slate-100 dark:from-slate-950 to-transparent flex flex-col gap-3">
+
+                    {/*
+      Unsaved changes bar — only rendered when isDirty is true.
+
+      This follows the standard mobile UX pattern: don't clutter the screen
+      with a publish button until there's actually something to publish.
+      The bar slides into view the moment the user makes any change.
+
+      CSS transition on the bar itself gives the slide-in feel.
+      We use conditional rendering (not opacity/translate) here because
+      the bar takes up space — we want the FAB to move up when it appears.
+    */}
+                    {isDirty && (
+                        <div
+                            className={[
+                                'flex items-center justify-between gap-3',
+                                'px-4 py-3',
+                                'bg-white dark:bg-slate-900',
+                                'border border-brand-200 dark:border-brand-800',
+                                'rounded-2xl shadow-sm',
+                                // Subtle brand-tinted border signals this is an action item
+                            ].join(' ')}
+                        >
+                            {/* Unsaved indicator */}
+                            <div className="flex items-center gap-2">
+                                <div
+                                    className="w-2 h-2 rounded-full bg-amber-400 animate-pulse flex-shrink-0"
+                                    aria-hidden="true"
+                                />
+                                <span className="text-xs font-display font-semibold text-slate-600 dark:text-slate-400">
+            Unsaved changes
+          </span>
+                            </div>
+
+                            {/*
+          ── ATOM: Button — Publish Changes ───────────────────────────────
+          size="sm" → compact, fits inside the unsaved changes bar.
+          variant="primary" → brand-600 purple, stands out against the bar.
+          loading={publishLoading} → spinner during the async save.
+        */}
+                            <Button
+                                variant="primary"
+                                size="sm"
+                                loading={publishLoading}
+                                onClick={() => onPublish?.({ name, bio, links })}
+                                type="button"
+                                className="flex-shrink-0"
+                            >
+                                Publish
+                            </Button>
+                        </div>
                     )}
-                >
+
+                    {/*
+      ── ATOM: Button — Add new link FAB ──────────────────────────────────
+      Unchanged from the original — always visible on /dashboard panel.
+    */}
                     <Button
                         variant="primary"
                         size="xl"
-                        fullWidth={true}
-                        leftIcon={<Plus className="w-4 h-4" aria-hidden="true" />}
+                        fullWidth
+                        leftIcon={<Plus className="w-5 h-5" />}
                         onClick={() => setAddOpen(true)}
                         type="button"
                     >
-                        Add new Link
+                        Add new link
                     </Button>
+
                 </div>
             )}
 

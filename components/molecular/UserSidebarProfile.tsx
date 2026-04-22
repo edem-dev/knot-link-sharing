@@ -36,7 +36,7 @@ const UserSidebarProfile:React.FC<UserSidebarProfileProps> = ({
                 <p className={"text-sm font-display font-semibold text-slate-900 dark:text-white truncate"}>
                     {name}
                 </p>
-                <p className={"text-xs font-body text-slate-400 dark:text-slate-400 truncate"}>
+                <p className={"text-xs font-body text-slate-400 dark:text-slate-400 truncate capitalize"}>
                     {role}
                 </p>
             </div>

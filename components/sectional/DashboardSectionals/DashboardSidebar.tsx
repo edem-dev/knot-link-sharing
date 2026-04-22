@@ -64,7 +64,7 @@ const DashboardSidebar:React.FC<DashboardSidebarProps> = ({
                 <UserSidebarProfile
                     name={user.name}
                     role={user.role}
-                    // avatarSrc="/Image/av-2.png"
+                    avatarSrc={user.avatarSrc}
                 />
             </div>
 

@@ -42,36 +42,37 @@ const UsernameOnboardingPage:React.FC<UsernameOnboardingPageProps> = ({
     const [availability, setAvailability] = useState<UsernameAvailability>('idle');
 
     //useEffect - debounced availability check------------------->
-     useEffect(() => {
-         //Usernames shorter than 3 chars are not valid and will
-         // trigger an 'idle' state.
+    useEffect(() => {
+        if (username.length < 3) {
+            setAvailability('idle')
+            return
+        }
 
-         if (username.length < 3) {
-             setAvailability('idle');
-             return;
-         }
+        setAvailability('checking')
 
-        //for good UX show and spinner which the 'checking' state owns.
-        //So that the [userPublic] knows that something is happening.
-         setAvailability('checking');
+        const timer = setTimeout(async () => {
+            try {
+                // Real API call to GET /api/username
+                const res = await fetch(
+                    `/api/username?u=${encodeURIComponent(username)}`
+                )
+                const data = await res.json()
 
-        //Now schedule the 500ms check.
-         const timer = setTimeout(async () => {
-             try {
-                 //Todo: Replace this cod e block with an actual API call
+                if (!res.ok) {
+                    // Validation error from the server (too short, invalid chars etc.)
+                    setAvailability('taken')
+                    return
+                }
 
-                 //-Simulation-Always 'available' for demo purposes
-                 setAvailability('available');
-             }catch {
-                 // Network error or server error — reset to idle so the [userPublic] can retry.
-                 // We don't show an error message here because the field is still valid —
-                 // we just couldn't check. The [userPublic] can continue typing or submit.
-                 setAvailability('idle');
-             }
-         },3000)
-         return () => clearTimeout(timer);
+                setAvailability(data.available ? 'available' : 'taken')
+            } catch {
+                // Network error — reset to idle so the user can retry
+                setAvailability('idle')
+            }
+        }, 500)  // ← 500ms, not 3000ms
 
-     }, [username]);
+        return () => clearTimeout(timer)
+    }, [username])
 
      //Input Change handler function------------------------------>
     const handleUsernameChange = (e:React.ChangeEvent<HTMLInputElement>) => {
@@ -85,7 +86,7 @@ const UsernameOnboardingPage:React.FC<UsernameOnboardingPageProps> = ({
     //Form Submit Handler ---------------------------------------->
     const handleSubmit = (e:React.FormEvent<HTMLFormElement>) =>{
         e.preventDefault();
-    //     Guard the submission-> If the [getUsername] is available, then proceed.
+    //     Guard the submission-> If the [get-username] is available, then proceed.
         if (availability !== 'available') return;
          onClaim?.(username);
     };
@@ -98,11 +99,11 @@ const UsernameOnboardingPage:React.FC<UsernameOnboardingPageProps> = ({
         variant: 'success' | 'error';
     }>> = {
         available: {
-            message: 'This [getUsername] is available!',
+            message: 'This username is available!',
             variant: 'success',
         },
         taken: {
-            message: 'That [getUsername] is already taken.',
+            message: 'That username is already taken.',
             variant: 'error',
         },
     };

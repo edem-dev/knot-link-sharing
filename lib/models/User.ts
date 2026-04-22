@@ -43,7 +43,7 @@ const UserSchema = new Schema(
             lowercase: true,   // enforced at DB level — prevents case duplicates
             trim:      true,
             index:     true,   // indexed for fast lookup on the public profile page
-            // knotted.com/[getUsername] — must be unique and URL-safe.
+            // knotted.com/[get-username] — must be unique and URL-safe.
             // Validated on creation: /^[a-z0-9_-]+$/
         },
 
@@ -74,7 +74,6 @@ const UserSchema = new Schema(
 
         role: {
             type:    String,
-            enum:    ['free', 'pro'],
             default: 'free',
             // Controls:
             //   - showBranding on PublicProfilePage (free users get "Powered by Knotted")

@@ -1,79 +1,85 @@
-'use client';
+// app/(protected)/dashboard/DashboardClient.tsx
+'use client'
 
-import React, { useEffect, useState } from 'react';
-import DashboardPage from "@/components/sectional/DashboardSectionals/DashboardPage";
-import MobileDashboardPage from "@/components/sectional/DashboardSectionals/MobileDashboardPage";
+import { useRef, useState } from 'react'
+import { uploadAvatar } from '@/lib/uploadAvatar'
+import DashboardPage from '@/components/sectional/DashboardSectionals/DashboardPage'
+import MobileDashboardPage from '@/components/sectional/DashboardSectionals/MobileDashboardPage'
 
-// ✅ Responsive hook (avoids rendering both components)
-function useIsMobile() {
-    const [isMobile, setIsMobile] = useState<boolean | null>(null);
-
-    useEffect(() => {
-        const check = () => setIsMobile(window.innerWidth < 768);
-        check();
-
-        window.addEventListener('resize', check);
-        return () => window.removeEventListener('resize', check);
-    }, []);
-
-    return isMobile;
+interface Props {
+    initialProfile: {
+        name:      string
+        bio:       string
+        role:      string
+        avatarSrc: string
+    }
+    initialLinks: { id: string; title: string; url: string }[]
+    username:     string
+    isMobile:     boolean
+    onPublish: (data: {
+        name:  string
+        bio:   string
+        links: { id: string; title: string; url: string }[]
+    }) => Promise<void>
 }
 
-const Page = () => {
-    const isMobile = useIsMobile();
+export default function DashboardClient({
+                                            initialProfile,
+                                            initialLinks,
+                                            username,
+                                            isMobile,
+                                            onPublish,
+                                        }: Props) {
+    // Track avatar src locally so it updates immediately after upload
+    // without requiring a full page refresh
+    const [avatarSrc, setAvatarSrc]     = useState(initialProfile.avatarSrc)
+    const [uploading, setUploading]     = useState(false)
+    const fileInputRef                  = useRef<HTMLInputElement>(null)
 
-    // ✅ Single source of truth
-    const initialProfile = {
-        name: 'Michael Kumah',
-        bio: 'Knotted creator',
-        role: 'Pro',
-    };
+    // Triggered by the Avatar component's onEdit pencil button
+    const handleAvatarEdit = () => {
+        fileInputRef.current?.click()
+    }
 
-    const initialLinks = [
-        { id: '1', title: 'Portfolio', url: 'https://alexrivers.design' },
-    ];
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (!file) return
 
-    // ✅ Reusable + safe API handler
-    const handlePublish = async ({ name, bio, links }: any) => {
+        setUploading(true)
         try {
-            const res = await fetch('/api/profile', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json', // ✅ FIXED
-                },
-                body: JSON.stringify({ name, bio, links }),
-            });
-
-            if (!res.ok) {
-                throw new Error('Failed to publish profile');
-            }
-        } catch (error) {
-            console.error('Publish error:', error);
+            const newUrl = await uploadAvatar(file)
+            setAvatarSrc(newUrl)
+        } catch (err) {
+            console.error('[Avatar] Upload failed:', err)
+        } finally {
+            setUploading(false)
+            // Reset so the same file can be selected again if needed
+            if (fileInputRef.current) fileInputRef.current.value = ''
         }
-    };
+    }
 
-    // ✅ Prevent hydration mismatch flicker
-    if (isMobile === null) return null;
+    const Component = isMobile ? MobileDashboardPage : DashboardPage
 
     return (
-        <div>
-            {isMobile ? (
-                <MobileDashboardPage
-                    initialProfile={initialProfile}
-                    initialLinks={initialLinks}
-                    username="alexrivers"
-                    onPublish={handlePublish}
-                />
-            ) : (
-                <DashboardPage
-                    initialProfile={initialProfile}
-                    initialLinks={initialLinks}
-                    username="alexrivers"
-                    onPublish={handlePublish}
-                />
-            )}
-        </div>
-    );
-};
+        <>
+            {/* Hidden file input — triggered programmatically by Avatar onEdit */}
+            <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleFileChange}
+                aria-hidden="true"
+            />
 
-export default Page;
+            <Component
+                initialProfile={{ ...initialProfile, avatarSrc }}
+                initialLinks={initialLinks}
+                username={username}
+                onPublish={onPublish}
+                onAvatarEdit={handleAvatarEdit}
+                avatarUploading={uploading}
+            />
+        </>
+    )
+}

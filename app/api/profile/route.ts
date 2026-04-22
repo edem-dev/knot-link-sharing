@@ -56,10 +56,12 @@ export async function PUT(req:Request){
         return Response.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { name, bio, links } = await req.json() as {
-        name:  string
-        bio:   string
-        links: { id: string; title: string; url: string }[]
+    const { name, bio, links, role, avatarUrl } = await req.json() as {
+        name:       string
+        bio:        string
+        links:      { id: string; title: string; url: string }[]
+        role?:      string
+        avatarUrl?: string
     }
     // Derive `order` from array position.
     // The UI sends links in the exact order the user sees them,
@@ -84,7 +86,9 @@ export async function PUT(req:Request){
             $set: {
                 displayName: name,
                 bio,
-                links: linksWithOrder,
+                links:       linksWithOrder,
+                ...(role && { role }),
+                ...(avatarUrl && { avatarUrl }),
             },
         },
         {new:true}

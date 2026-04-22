@@ -226,7 +226,7 @@ const page = () => {
                 <div className={"flex justify-center items-center flex-row shrink-0 gap-2"}>
                     {/*<FeatureCard*/}
                     {/*     icon={<AtSign className="w-6 h-6" />}*/}
-                    {/*     title="Custom [getUsername]"*/}
+                    {/*     title="Custom [get-username]"*/}
                     {/*     description="Claim your unique URL in seconds."*/}
                     {/*/>*/}
                     {/*<FeatureCard*/}

@@ -1,0 +1,104 @@
+// app/(protected)/dashboard/page.tsx
+import { auth } from '@clerk/nextjs/server'
+import { redirect } from 'next/navigation'
+import { headers } from 'next/headers'
+import { revalidatePath } from 'next/cache'
+import connectDB from '@/lib/mongodb'
+import User from '@/lib/models/User'
+import DashboardPage from "@/components/sectional/DashboardSectionals/DashboardPage";
+import MobileDashboardPage from "@/components/sectional/DashboardSectionals/MobileDashboardPage";
+// import { DashboardEditorPage } from '@/components/sectional/DashboardSections/DashboardEditorPage'
+// import { MobileDashboardPage } from '@/components/sectional/DashboardSections/MobileDashboardPage'
+
+export default async function DashboardClient() {
+    const { userId } = await auth()
+    if (!userId) redirect('/sign-in')
+
+    await connectDB()
+    const user = await User.findOne({ clerkUserId: userId }).lean()
+    if (!user) redirect('/username')
+
+    const initialProfile = {
+        name:      user.displayName,
+        bio:       user.bio,
+        role:      user.role,
+        avatarSrc: user.avatarUrl,
+    }
+
+    const initialLinks = (
+        user.links as { _id: any; title: string; url: string; order: number }[]
+    )
+        .sort((a, b) => a.order - b.order)
+        .map(link => ({
+            id:    link._id.toString(),
+            title: link.title,
+            url:   link.url,
+        }))
+
+    // ── Server Action ───────────────────────────────────────────────────────────
+    // This runs on the server when "Publish Changes" is clicked.
+    // It writes directly to MongoDB — no fetch() to our own API needed.
+    // 'use server' marks it as a Server Action.
+    async function handlePublish({
+                                     name,
+                                     bio,
+                                     links,
+                                 }: {
+        name:  string
+        bio:   string
+        links: { id: string; title: string; url: string }[]
+    }) {
+        'use server'
+
+        const { userId } = await auth()
+        if (!userId) return
+
+        const linksWithOrder = links.map((link, index) => ({
+            title: link.title,
+            url:   link.url,
+            order: index,
+        }))
+
+        await connectDB()
+        await User.findOneAndUpdate(
+            { clerkUserId: userId },
+            {
+                $set: {
+                    displayName: name,
+                    bio,
+                    links: linksWithOrder,
+                },
+            },
+            { new: true }
+        )
+
+        // Revalidate the dashboard and public profile so they reflect
+        // the new data on next load without a full server restart
+        revalidatePath('/dashboard')
+        revalidatePath(`/${(user as any).username}`)
+    }
+
+    const headersList = await headers()
+    const userAgent = headersList.get('user-agent') ?? ''
+    const isMobile = /mobile|android|iphone|ipad/i.test(userAgent)
+
+    if (isMobile) {
+        return (
+            <MobileDashboardPage
+                initialProfile={initialProfile}
+                initialLinks={initialLinks}
+                username={(user as any).username}
+                onPublish={handlePublish}   // ← wired in
+            />
+        )
+    }
+
+    return (
+        <DashboardPage
+            initialProfile={initialProfile}
+            initialLinks={initialLinks}
+            username={(user as any).username}
+            onPublish={handlePublish}     // ← wired in
+        />
+    )
+}

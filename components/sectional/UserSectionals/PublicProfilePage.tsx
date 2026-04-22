@@ -150,7 +150,7 @@ const PublicProfilePage:React.FC<PublicProfilePageProps> = ({
                         },
                     ]}
                 />
-            )};
+            )}
 
         {/*Branding footer---------------------------------*/}
             {showBranding && (

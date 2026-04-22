@@ -80,6 +80,9 @@ export interface DashboardPageProps{
 
     //An extra tailwind class for additional styling
     className?:string;
+    //Avatar uploading props
+    onAvatarEdit?:    () => void       // ← add this
+    avatarUploading?: boolean
 }
 
 // ------------------------------------------------------------------------
@@ -99,6 +102,8 @@ interface EditorPanelProps{
     onAddOpen:()=> void;
     avatarName:string;
     avatarSrc?:string;
+    onAvatarEdit?:    () => void       // ← add this
+    avatarUploading?: boolean
 }
 
 //Editor panel component-----------------------------------------------------------//
@@ -113,6 +118,8 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
     onAddOpen,
     avatarName,
     avatarSrc,
+    onAvatarEdit,
+    avatarUploading
 }) => {
     return (
         <div className={"flex flex-col gap-6"}>
@@ -145,6 +152,7 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
                         size={"2xl"}
                         editable={true}
                         className={"shrink-0"}
+                        onEdit={onAvatarEdit}
                     />
 
                     <div className={"flex-1 flex flex-col gap-4"}>
@@ -437,9 +445,9 @@ const SettingsPanel:React.FC = () => (
                     defaultValue → uncontrolled for this demo.
                     //TODO: In production: make this controlled with its own useState.
                 */}
-                <FormField label={"Username"} htmlFor={"settings-[getUsername]"}>
+                <FormField label={"Username"} htmlFor={"settings-[get-username]"}>
                     <Input
-                        id={"settings-[getUsername]"}
+                        id={"settings-[get-username]"}
                         type={"text"}
                         defaultValue={"alexrivers"}
                         prefix={"knotted.to/"}
@@ -574,9 +582,6 @@ const ViewPanel: React.FC<ViewPagePanelProps> = ({
                 <h3 className={"font-display font-extrabold text-xl text-slate-900 dark:text-white mb-1"}>
                     {name}
                 </h3>
-                <p className={"font-display font-bold text-xs tracking-widest uppercase text-brand-600 dark:text-brand-400 mb-6"}>
-                    Knotted Creator
-                </p>
 
                 {/* Preview link list */}
                 <div className={"w-full max-w-xs flex flex-col gap-2 px-4"}>
@@ -625,13 +630,15 @@ const ViewPanel: React.FC<ViewPagePanelProps> = ({
 
 
 const DashboardPage:React.FC<DashboardPageProps> = ({
-    initialProfile = {name: 'Michael Kumah', bio: '', role: 'Knotted Creator', avatarSrc: ''},
-    initialLinks = [],
-    username = 'michaelkumah',
-    onPublish,
-    publishLoading = false,
-    className = '',
-}) => {
+                                                        initialProfile = {name: 'Michael Kumah', bio: '', role: 'Knotted Creator', avatarSrc: ''},
+                                                        initialLinks = [],
+                                                        username = 'michaelkumah',
+                                                        onPublish,
+                                                        publishLoading = false,
+                                                        className = '',
+                                                        onAvatarEdit,        // ← add
+                                                        avatarUploading,     // ← add
+                                                    }) => {
 
     const { signOut } = useClerk();
 
@@ -689,11 +696,11 @@ const DashboardPage:React.FC<DashboardPageProps> = ({
     //====================== Handle URL Copy=========================//
     const handleCopyUrl = useCallback(async () => {
         try {
-            await navigator.clipboard.writeText(`https://knotted.com/${username}`);
+            await navigator.clipboard.writeText(`https://knotted.to/${username}`);
         } catch { /* silent fail — URL is visible on screen */ }
         setUrlCopied(true);
         setTimeout(() => setUrlCopied(false), 2000);
-    }, [username]); // [getUsername] IS a dep — changing it changes the URL to copy
+    }, [username]); // [get-username] IS a dep — changing it changes the URL to copy
     //====================== Handle URL Copy=========================//
 
     //======================PANEL ROUTING==================================//
@@ -711,7 +718,9 @@ const DashboardPage:React.FC<DashboardPageProps> = ({
                         onLinkDelete={handleLinkDelete}
                         onAddOpen={() => setAddOpen(true)}
                         avatarName={initialProfile.name}
-                        avatarSrc={initialProfile.avatarSrc}
+                        avatarSrc={initialProfile.avatarSrc || undefined}
+                        onAvatarEdit={onAvatarEdit}
+                        avatarUploading={avatarUploading}
                     />
                 );
                 case "/analytics": return <AnalyticsPanel />;
@@ -721,7 +730,7 @@ const DashboardPage:React.FC<DashboardPageProps> = ({
                         username={username}
                         links={links}
                         name={name}
-                        avatarSrc={initialProfile.avatarSrc}
+                        avatarSrc={initialProfile.avatarSrc || undefined}
                     />
                 );
                 default: return null;
@@ -757,8 +766,8 @@ const DashboardPage:React.FC<DashboardPageProps> = ({
             <DashboardSidebar
                 user={{
                     name:      initialProfile.name,
-                    role:      initialProfile.role ?? 'Knotted Creator',
-                    avatarSrc: initialProfile.avatarSrc,
+                    role:      initialProfile.role ?? 'Creator',
+                    avatarSrc: initialProfile.avatarSrc || undefined,
                 }}
                 activePath={activePath}
                 onNavChange={(href) => setActivePath(href as NavHref)}
@@ -789,7 +798,7 @@ const DashboardPage:React.FC<DashboardPageProps> = ({
                 {/* ===================Right Panel: URL Chip + Publish Button*/}
                     <div className={"flex items-center gap-2"}>
                         <PageURLBanner
-                            url="knotted.to/alexrivers"
+                            url={`knotted.to/${username}`}
                             subLabel="Share your link with your audience"
                             onCopy={handleCopyUrl}
                         />

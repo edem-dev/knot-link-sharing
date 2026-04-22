@@ -5,7 +5,7 @@ import { clerkAppearance } from '@/lib/clerk-appearance'
 export default function SignUpPage() {
     return (
         <SignUp
-            forceRedirectUrl="/username"       // ← was afterSignUpUrl
+            forceRedirectUrl="/get-username"       // ← was afterSignUpUrl
             signInUrl="/sign-in"
             appearance={clerkAppearance}
         />
