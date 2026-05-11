@@ -13,7 +13,6 @@ import {
 //====================Components=====================//
 //====================== Molecular Components ======================//
 import UserSidebarProfile from "@/components/molecular/UserSidebarProfile";
-import SidebarNavItem from "@/components/molecular/SidebarNavItem";
 import PageURLBanner from "@/components/molecular/PageURLBanner";
 import EditableLinkRow from "@/components/molecular/EditableLinkRow";
 import AddLinkModal from "@/components/molecular/AddLinkModal";
@@ -37,7 +36,7 @@ import { useClerk } from '@clerk/nextjs'
 // ================ Nav Items =============================//
 const NAV_ITEMS = [
     { href: '/dashboard', label: 'Dashboard',    Icon: LayoutDashboard },
-    { href: '/profile',   label: 'View my page', Icon: Eye             },
+    { href: '/profile',   label: 'View page', Icon: Eye             },
     { href: '/analytics', label: 'Analytics',    Icon: BarChart2       },
     { href: '/settings',  label: 'Settings',     Icon: Settings        },
 ] as const;
@@ -577,18 +576,7 @@ const MobileDashboardPage: React.FC<DashboardPageProps> = (
                     className="mb-6"
                 />
 
-                <nav className="flex flex-col gap-1 flex-1" aria-label="Mobile navigation">
-                    {NAV_ITEMS.map(({ href, label, Icon }) => (
-                        <SidebarNavItem
-                            key={href}
-                            icon={<Icon className="w-4 h-4" />}
-                            label={label}
-                            href={href}
-                            active={activePath === href}
-                            onClick={() => handleNavClick(href)}
-                        />
-                    ))}
-                </nav>
+                <div className="flex-1" aria-hidden="true" />
 
                 <div className="mt-auto pt-6 border-t border-slate-100 dark:border-slate-800">
                     <Button
@@ -655,7 +643,9 @@ const MobileDashboardPage: React.FC<DashboardPageProps> = (
             <main
                 className={clsx(
                     'flex-1 px-4 py-5 flex flex-col gap-5 overflow-y-auto',
-                    showFab ? 'pb-28' : 'pb-8'
+                    // Reserve extra room only when the unsaved-changes publish bar
+                    // can appear, so it doesn't cover the last bit of content.
+                    showFab && isDirty ? 'pb-24' : 'pb-8'
                 )}
                 aria-label="Main content area for mobile dashboard"
             >
@@ -754,6 +744,23 @@ const MobileDashboardPage: React.FC<DashboardPageProps> = (
                                     </p>
                                 )}
                             </div>
+
+                            {/*
+                              Add-new-link action — moved out of the floating FAB and
+                              into the section it actually acts upon. Keeps the bottom
+                              of the screen reserved for navigation + publish only.
+                            */}
+                            <Button
+                                variant="outline"
+                                size="lg"
+                                fullWidth
+                                leftIcon={<Plus className="w-5 h-5" aria-hidden="true" />}
+                                onClick={() => setAddOpen(true)}
+                                type="button"
+                                className="mt-4 border-dashed"
+                            >
+                                Add new link
+                            </Button>
                         </section>
                     </>
                 )}
@@ -775,12 +782,14 @@ const MobileDashboardPage: React.FC<DashboardPageProps> = (
                 )}
             </main>
 
-            {/*==============Sticky FAB========================*/}
-            {/*// 3. Replace the sticky FAB section with the dirty-aware version:*/}
-
-            {/* ── Sticky action area ───────────────────────────────────────────────── */}
-            {showFab && (
-                <div className="sticky bottom-0 px-4 pb-6 pt-3 bg-gradient-to-t from-slate-100 dark:from-slate-950 to-transparent flex flex-col gap-3">
+            {/*============== Sticky Publish bar ======================*/}
+            {/*
+              Only rendered when the user has unsaved changes on the dashboard panel.
+              The Add-new-link action lives in the Active Links section now, so this
+              area is purely for save/publish state.
+            */}
+            {showFab && isDirty && (
+                <div className="sticky bottom-0 px-4 pb-4 pt-3 bg-gradient-to-t from-slate-100 dark:from-slate-950 to-transparent flex flex-col gap-3">
 
                     {/*
       Unsaved changes bar — only rendered when isDirty is true.
@@ -834,21 +843,6 @@ const MobileDashboardPage: React.FC<DashboardPageProps> = (
                         </div>
                     )}
 
-                    {/*
-      ── ATOM: Button — Add new link FAB ──────────────────────────────────
-      Unchanged from the original — always visible on /dashboard panel.
-    */}
-                    <Button
-                        variant="primary"
-                        size="xl"
-                        fullWidth
-                        leftIcon={<Plus className="w-5 h-5" />}
-                        onClick={() => setAddOpen(true)}
-                        type="button"
-                    >
-                        Add new link
-                    </Button>
-
                 </div>
             )}
 
@@ -857,6 +851,85 @@ const MobileDashboardPage: React.FC<DashboardPageProps> = (
                 onClose={() => setAddOpen(false)}
                 onAdd={handleAddLink}
             />
+
+            {/*================ Bottom Navigation ==================*/}
+            {/*
+              Sits naturally at the bottom of the flex column (after <main>).
+              Because it's part of the normal flow — not fixed — the sticky FAB
+              inside <main> can keep its ORIGINAL `sticky bottom-0` behaviour
+              and float just above this bar without manual offsets.
+            */}
+            <nav
+                aria-label="Primary mobile navigation"
+                className={clsx(
+                    // Layout
+                    'sticky bottom-0 z-30 shrink-0',
+                    'flex items-stretch justify-around gap-1',
+                    'px-3 py-2 pt-2',
+                    'pb-[max(0.5rem,env(safe-area-inset-bottom))]',
+                    // Surface — frosted glass with a subtle top hairline + soft shadow
+                    'bg-white/90 dark:bg-slate-900/90 backdrop-blur-md',
+                    'border-t border-slate-200 dark:border-slate-800/70',
+                    'shadow-[0_-8px_24px_-16px_rgba(15,23,42,0.18)]'
+                )}
+            >
+                {NAV_ITEMS.map(({ href, label, Icon }) => {
+                    const isActive = activePath === href;
+                    return (
+                        <button
+                            key={href}
+                            type="button"
+                            onClick={() => handleNavClick(href)}
+                            aria-current={isActive ? 'page' : undefined}
+                            aria-label={label}
+                            className={clsx(
+                                // Tap target — comfortably hits the 44px minimum
+                                'group relative flex-1 min-h-[3.25rem]',
+                                'flex flex-col items-center justify-center gap-1',
+                                'rounded-2xl',
+                                'transition-[color,transform] duration-200 ease-out',
+                                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-900',
+                                'active:scale-[0.94]',
+                                isActive
+                                    ? 'text-brand-600 dark:text-brand-400'
+                                    : 'text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200'
+                            )}
+                        >
+                            {/* Icon backplate — a brand-tinted pill that smoothly grows under the active tab */}
+                            <span
+                                className={clsx(
+                                    'relative flex items-center justify-center',
+                                    'h-9 w-12 rounded-full',
+                                    'transition-all duration-200 ease-out',
+                                    isActive
+                                        ? 'bg-brand-100/80 dark:bg-brand-500/15 scale-100'
+                                        : 'bg-transparent scale-90 group-hover:bg-slate-100 dark:group-hover:bg-slate-800/60'
+                                )}
+                            >
+                                <Icon
+                                    className={clsx(
+                                        'transition-all duration-200',
+                                        isActive ? 'w-[15px] h-[15px]' : 'w-5 h-5'
+                                    )}
+                                    aria-hidden="true"
+                                    strokeWidth={isActive ? 2.4 : 2}
+                                />
+                            </span>
+
+                            <span
+                                className={clsx(
+                                    'font-display text-xs leading-none tracking-wide',
+                                    'transition-all duration-200',
+                                    isActive ? 'font-bold opacity-100' : 'font-semibold opacity-80'
+                                )}
+                            >
+                                {label}
+                            </span>
+                        </button>
+                    );
+                })}
+            </nav>
+            {/*================ Bottom Navigation ==================*/}
         </div>
     );
 };

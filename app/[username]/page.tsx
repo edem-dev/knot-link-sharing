@@ -32,7 +32,7 @@ export default async function PublicProfile({
     return (
         <PublicProfilePage
             name={typedUser.displayName || typedUser.username}
-            tagline={typedUser.role}
+            tagline={`@${typedUser.username}`}
             bio={typedUser.bio}
             avatarSrc={typedUser.avatarUrl}
             links={typedUser.links
