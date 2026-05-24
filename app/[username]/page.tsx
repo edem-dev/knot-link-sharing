@@ -43,7 +43,7 @@ export default async function PublicProfile({
                     title: link.title,
                     href:  link.url,
                 }))}
-            showBranding={typedUser.role === 'free'}
+            showBranding={true}
             stats={{
                 likes:  '0',
                 shares: '0',
