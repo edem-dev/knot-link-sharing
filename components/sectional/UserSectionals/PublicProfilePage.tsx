@@ -44,7 +44,7 @@ const PublicProfilePage:React.FC<PublicProfilePageProps> = ({
     tagline,
     location,
     links,
-    showBranding = false,
+    showBranding,
     stats,
     bio,
     className,
