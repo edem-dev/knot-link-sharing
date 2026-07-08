@@ -39,7 +39,7 @@ import PageUrlBanner from "@/components/molecular/PageURLBanner";
 
 
 
-const route = () => {
+const page = () => {
 
     const [bio, setBio] = React.useState("");
     const [open, setOpen] = React.useState(false);
