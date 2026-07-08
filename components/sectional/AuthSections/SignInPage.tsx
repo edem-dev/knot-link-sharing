@@ -196,7 +196,7 @@ export interface SignInPageProps {
                      <p className="text-center text-sm font-body text-slate-500 dark:text-slate-400 mt-6">
                          New to Knotted?{' '}
                          <a
-                             href="/sign-up"
+                             href="/signup"
                              className={[
                                  'font-medium',
                                  'text-brand-600 hover:text-brand-700',

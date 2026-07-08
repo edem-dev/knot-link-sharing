@@ -18,7 +18,7 @@ const ProfilePreviewCard:React.FC = () => {
                 'border border-slate-100 dark:border-slate-800',
             ].join(' ')}
             role="img"
-            aria-label="Preview of a Knotted public profile page"
+            aria-label="Preview of a Knotted public profile route"
         >
             {/* Browser chrome — three coloured dots */}
             <div className="flex items-center gap-1.5 px-4 pt-4 pb-3" aria-hidden="true">

@@ -1,6 +1,6 @@
 'use client';
 import React from 'react';
-import {BarChart2, Eye, LayoutDashboard, LogOutIcon, Settings} from "lucide-react";
+import {BarChart2, Eye, LayoutDashboard, LogOut, Settings} from "lucide-react";
 import KnottedLogo from "@/components/atomic/KnottedLogo";
 import UserSidebarProfile from "@/components/molecular/UserSidebarProfile";
 import SidebarNavItem from "@/components/molecular/SidebarNavItem";
@@ -39,7 +39,7 @@ const DashboardSidebar:React.FC<DashboardSidebarProps> = ({
 
     const navItems = [
         { href: '/dashboard', label: 'Dashboard',    Icon: LayoutDashboard },
-        { href: '/profile',   label: 'View my page', Icon: Eye             },
+        { href: '/profile',   label: 'View my route', Icon: Eye             },
         { href: '/analytics', label: 'Analytics',    Icon: BarChart2       },
         { href: '/settings',  label: 'Settings',     Icon: Settings        },
     ];
@@ -59,14 +59,7 @@ const DashboardSidebar:React.FC<DashboardSidebarProps> = ({
             <div className={'px-2 mb-4'}>
                 <KnottedLogo  logoText={true} />
             </div>
-        {/*User Sidebar Profile-----------------------------------------*/}
-            <div className={'px-2 mb-4'}>
-                <UserSidebarProfile
-                    name={user.name}
-                    role={user.role}
-                    avatarSrc={user.avatarSrc}
-                />
-            </div>
+
 
         {/*NAv item ---------------------------------------------*/}
             <nav
@@ -89,15 +82,23 @@ const DashboardSidebar:React.FC<DashboardSidebarProps> = ({
                 })}
             </nav>
 
-            <Button
-                type={"button"}
-                variant={"danger"}
-                onClick={onSignOut}
-                size={"md"}
-                leftIcon={<LogOutIcon className="w-4 h-4"/>}
-            >
-                Sign Out
-            </Button>
+
+            {/*User Sidebar Profile-----------------------------------------*/}
+            <div className={'px-2 mb-4'}>
+                <UserSidebarProfile
+                    name={user.name}
+                    role={user.role}
+                    avatarSrc={user.avatarSrc}
+                />
+                <Button
+                    variant={"ghost"}
+                    onClick={onSignOut}
+                    fullWidth={true}
+                    rightIcon={<LogOut/>}
+                >
+                    Sign Out
+                </Button>
+            </div>
         </aside>
     );
 };

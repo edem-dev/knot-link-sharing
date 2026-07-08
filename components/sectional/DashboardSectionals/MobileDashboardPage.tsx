@@ -1,7 +1,8 @@
-'use client';
+﻿'use client';
 
 //====================Lucide React Imports=====================//
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import {createClient} from "@/lib/supabase/client";
 
 import {
     X, LogOut,
@@ -14,6 +15,7 @@ import {
 //====================== Molecular Components ======================//
 import UserSidebarProfile from "@/components/molecular/UserSidebarProfile";
 import PageURLBanner from "@/components/molecular/PageURLBanner";
+import AvatarMenuDropdown from "@/components/molecular/AvatarMenuDropdown";
 import EditableLinkRow from "@/components/molecular/EditableLinkRow";
 import AddLinkModal from "@/components/molecular/AddLinkModal";
 import FormField from "@/components/molecular/Formfield";
@@ -31,12 +33,12 @@ import { LinkRowData } from "@/components/molecular/EditableLinkRow";
 import { clsx } from 'clsx';
 
 // =======================Clerk Sign out====================//
-import { useClerk } from '@clerk/nextjs'
+
 
 // ================ Nav Items =============================//
 const NAV_ITEMS = [
     { href: '/dashboard', label: 'Dashboard',    Icon: LayoutDashboard },
-    { href: '/profile',   label: 'View page', Icon: Eye             },
+    { href: '/profile',   label: 'View route', Icon: Eye             },
     { href: '/analytics', label: 'Analytics',    Icon: BarChart2       },
     { href: '/settings',  label: 'Settings',     Icon: Settings        },
 ] as const;
@@ -49,292 +51,16 @@ import {DashboardPageProps} from "@/components/sectional/DashboardSectionals/Das
 import Link from "next/link";
 
 //=======================================================================//
-//==================== Internal Panel Components ======================//
 //=======================================================================//
-
-//======================Analytics panel================================//
-const AnalyticsPanel: React.FC = () => {
-    const overviewStats = [
-        { label: 'Total Views',  value: '12,847', delta: '+12% this week', Icon: Globe             },
-        { label: 'Link Clicks',  value: '3,291',  delta: '+8% this week',  Icon: MousePointerClick },
-        { label: 'Followers',    value: '1,024',  delta: '+24 this week',  Icon: Users             },
-        { label: 'Top Link CTR', value: '34.2%',  delta: 'Portfolio',      Icon: TrendingUp        },
-    ];
-
-    const topLinks = [
-        { title: 'Portfolio Website', clicks: 892, pct: 72 },
-        { title: 'Latest Case Study', clicks: 421, pct: 34 },
-        { title: 'YouTube Channel',   clicks: 210, pct: 17 },
-    ];
-
-    return (
-        <div className="flex flex-col gap-6">
-            <section
-                className={clsx(
-                    'bg-white dark:bg-slate-900',
-                    'rounded-3xl border border-slate-100',
-                    'dark:border-slate-800 p-6'
-                )}
-            >
-                <h2
-                    id="analytics-overview-heading"
-                    className={clsx(
-                        'font-display font-bold text-base',
-                        'text-slate-800 dark:text-white',
-                        'flex items-center gap-2 mb-6'
-                    )}
-                >
-                    <BarChart2 className="w-5 h-5 text-brand-500" aria-hidden="true" />
-                    Overview
-                </h2>
-
-                <div className="grid grid-cols-2 gap-4">
-                    {overviewStats.map(({ label, value, delta, Icon }) => (
-                        <div
-                            key={label}
-                            className={clsx(
-                                'flex flex-col gap-2',
-                                'bg-slate-50 dark:bg-slate-800',
-                                'rounded-2xl p-4'
-                            )}
-                        >
-                            <div className="flex items-center gap-2">
-                                <Icon className="w-5 h-5 text-brand-500 dark:text-brand-400" aria-hidden="true" />
-                                <span
-                                    className={clsx(
-                                        'font-display font-semibold text-xs',
-                                        'uppercase tracking-widest text-slate-500 dark:text-slate-400'
-                                    )}
-                                >
-                                    {label}
-                                </span>
-                            </div>
-                            <p className={clsx('font-display font-extrabold text-2xl', 'text-slate-900 dark:text-white')}>
-                                {value}
-                            </p>
-                            <p className="text-xs font-body text-slate-400 dark:text-slate-500">{delta}</p>
-                        </div>
-                    ))}
-                </div>
-            </section>
-
-            <section
-                aria-labelledby="analytics-top-links-heading"
-                className={clsx(
-                    'bg-white dark:bg-slate-900',
-                    'rounded-3xl border border-slate-100',
-                    'dark:border-slate-800 p-6'
-                )}
-            >
-                <h2
-                    id="analytics-top-links-heading"
-                    className={clsx('font-display font-bold text-base', 'text-slate-800 dark:text-white mb-6')}
-                >
-                    Top Links
-                </h2>
-                <div className="flex flex-col gap-4">
-                    {topLinks.map(({ title, clicks, pct }) => (
-                        <div key={title}>
-                            <div className="flex items-center justify-between mb-2">
-                                <span
-                                    className={clsx(
-                                        'text-sm font-body font-medium',
-                                        'text-slate-700 dark:text-slate-200',
-                                        'truncate'
-                                    )}
-                                >
-                                    {title}
-                                </span>
-                                <span className="text-sm font-body text-slate-500 flex-shrink-0 ml-3">
-                                    {clicks} clicks
-                                </span>
-                            </div>
-                            <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
-                                <div
-                                    className="h-full bg-brand-600 rounded-full transition-all duration-500"
-                                    style={{ width: `${pct}%` }}
-                                    role="progressbar"
-                                    aria-valuenow={pct}
-                                    aria-valuemin={0}
-                                    aria-valuemax={100}
-                                    aria-label={`${title}: ${pct}% of clicks`}
-                                />
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </section>
-        </div>
-    );
-};
-
-//======================Settings panel================================//
-const SettingsPanel: React.FC = () => (
-    <div className="flex flex-col gap-6">
-        <section
-            className={clsx(
-                'bg-white dark:bg-slate-900',
-                'rounded-3xl border border-slate-100',
-                'dark:border-slate-800 p-6'
-            )}
-        >
-            <h2
-                id="settings-heading"
-                className="font-display font-bold text-base text-slate-800 dark:text-white flex items-center gap-2 mb-6"
-            >
-                <Settings className="w-5 h-5 text-brand-500" aria-hidden="true" />
-                Account Settings
-            </h2>
-
-            <div className="flex flex-col gap-4">
-                <FormField label="Email Address" htmlFor="settings-email">
-                    <Input
-                        id="settings-email"
-                        type="email"
-                        value=""
-                        defaultValue="alex@example.com"
-                        placeholder="Your email address"
-                        autoComplete="email"
-                    />
-                </FormField>
-
-                <FormField label="Username" htmlFor="settings-username">
-                    <Input
-                        id="settings-username"
-                        type="text"
-                        defaultValue="alexrivers"
-                        prefix="knottted.vercel.app/"
-                        placeholder="yourname"
-                        autoComplete="off"
-                        spellCheck={false}
-                    />
-                </FormField>
-
-                <Button
-                    variant="primary"
-                    size="md"
-                    type="button"
-                    onClick={() => {/* TODO: PATCH /api/settings */}}
-                >
-                    Save Changes
-                </Button>
-            </div>
-        </section>
-
-        <section
-            className={clsx(
-                'bg-white dark:bg-slate-900',
-                'rounded-3xl border border-red-100',
-                'dark:border-red-900/50 p-6'
-            )}
-            aria-labelledby="danger-zone-heading"
-        >
-            <h2
-                id="danger-zone-heading"
-                className="font-display font-bold text-base text-red-600 dark:text-red-400 mb-2"
-            >
-                Danger Zone
-            </h2>
-            <p className="font-body text-sm text-slate-500 dark:text-slate-400 leading-relaxed mb-4">
-                Permanently delete your account and all your data. This cannot be undone.
-            </p>
-
-            <Button
-                variant="danger"
-                size="md"
-                type="button"
-                onClick={() => {/* TODO: open confirmation Modal → DELETE /api/account */}}
-            >
-                Delete Account
-            </Button>
-        </section>
-    </div>
-);
-
-//======================View panel================================//
-interface ViewPagePanelProps {
-    username:   string;
-    links:      LinkRowData[];
-    name:       string;
-    avatarSrc?: string;
-}
-
-const ViewPanel: React.FC<ViewPagePanelProps> = ({ username, links, name, avatarSrc }) => {
-    return (
-        <div
-            className={clsx(
-                'bg-white dark:bg-slate-900',
-                'rounded-3xl border border-slate-100',
-                'dark:border-slate-800 p-6'
-            )}
-            aria-labelledby="view-page-heading"
-        >
-            <div className="flex items-center justify-between mb-6">
-                <h2
-                    id="view-page-heading"
-                    className={clsx(
-                        'font-display font-bold text-base',
-                        'text-slate-800 dark:text-white',
-                        'flex items-center gap-2'
-                    )}
-                >
-                    <Eye className="w-5 h-5 text-brand-500" aria-hidden="true" />
-                    Your Public Page
-                </h2>
-                <Link
-                    href={`https://knottted.vercel.app/${username}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={clsx(
-                        'inline-flex items-center gap-2',
-                        'px-3 py-1.5',
-                        'text-sm font-medium',
-                        'text-brand-600 bg-brand-50 dark:bg-brand-900/50',
-                        'rounded-full'
-                    )}
-                >
-                    Open in new tab →
-                </Link>
-            </div>
-
-            <div className="flex flex-col items-center py-8 border border-slate-100 dark:border-slate-800 rounded-2xl bg-slate-50 dark:bg-slate-950">
-                <Avatar name={name} src={avatarSrc} size="2xl" className="mb-4" />
-                <h3 className="font-display font-extrabold text-xl text-slate-900 dark:text-white mb-1">
-                    {name}
-                </h3>
-                {/*<p className="font-display font-bold text-xs tracking-widest uppercase text-brand-600 dark:text-brand-400 mb-6">*/}
-                {/*    Knotted Creator*/}
-                {/*</p>*/}
-
-                <div className="w-full max-w-xs flex flex-col gap-2 px-4">
-                    {links.length > 0
-                        ? links.map((link) => (
-                            <div
-                                key={link.id}
-                                className={clsx(
-                                    'flex items-center',
-                                    'justify-between px-4 py-3 bg-white',
-                                    'dark:bg-slate-900 rounded-xl border',
-                                    'border-slate-200 dark:border-slate-700'
-                                )}
-                            >
-                                <span className="text-sm font-display font-medium text-slate-800 dark:text-white truncate">
-                                    {link.title || 'Untitled link'}
-                                </span>
-                                <span className="text-slate-400 ml-2 shrink-0 text-sm">→</span>
-                            </div>
-                        ))
-                        : (
-                            <p className="text-sm font-body text-slate-400 text-center py-4">
-                                No links yet — add some in the Dashboard tab.
-                            </p>
-                        )
-                    }
-                </div>
-            </div>
-        </div>
-    );
-};
+//==== Shared Panel Components (extracted from this file & DashboardPage) //
+//=======================================================================//
+// AnalyticsPanel, SettingsPanel and ViewPanel previously lived inline
+// here AND in DashboardPage.tsx with identical code. They are now shared
+// components imported below.
+import AnalyticsPanel from "@/components/sectional/DashboardSectionals/AnalyticsPanel";
+import SettingsPanel from "@/components/sectional/DashboardSectionals/SettingsPanel";
+import ViewPanel from "@/components/sectional/DashboardSectionals/ViewPanel";
+import {useRouter} from "next/navigation";
 
 //=======================================================================//
 //=============== Main Component: Mobile Dashboard Page =================//
@@ -349,25 +75,33 @@ const MobileDashboardPage: React.FC<DashboardPageProps> = (
         publishLoading,
         className = '',
         onAvatarEdit,
-        avatarUploading
+        avatarUploading,
+        userEmail,
+        onSignOut,
 
     }) => {
 
-    //======================Drawer State==========================//
-    // BUG FIX: Initial state was conceptually fine (false = closed), but the
-    // focus useEffect was firing on mount and calling triggerRef.current?.focus()
-    // unconditionally. On some mobile browsers this caused a scroll/repaint that
-    // made the off-screen drawer flash into view momentarily on load.
-    // Fix: guard the focus effect so it only runs when drawerOpen *changes*
-    // after the initial mount (using a `mounted` ref), and add `aria-hidden` +
-    // `inert` + `visibility` toggling to fully remove the drawer from the
-    // paint/accessibility tree when closed.
+
 
     //========================Handle Sign out===========================//
 
-    const {signOut } = useClerk();
 
     const [drawerOpen, setDrawerOpen] = useState(false);
+
+    //================ Avatar Dropdown Menu State =====================//
+    // Controls visibility of the small user menu (username + email + sign out)
+    // rendered from the sticky navbar Avatar.
+    const [avatarMenuOpen, setAvatarMenuOpen] = useState(false);
+
+    const handleAvatarMenuToggle = useCallback(() => {
+        setAvatarMenuOpen((prev) => !prev);
+    }, []);
+
+    const handleAvatarMenuClose = useCallback(() => {
+        setAvatarMenuOpen(false);
+    }, []);
+
+    // =============================Supabase sign put handler=============================
 
     //================Active Panel State==========================//
     const [activePath, setActivePath] = useState<NavHref>('/dashboard');
@@ -385,12 +119,12 @@ const MobileDashboardPage: React.FC<DashboardPageProps> = (
     const triggerRef = useRef<HTMLButtonElement>(null);
 
     // FIX 1: Track whether this is the initial mount so the focus effect
-    // does NOT steal focus on page load (which caused the flash-open glitch).
+    // does NOT steal focus on route load (which caused the flash-open glitch).
     const isMounted = useRef(false);
 
     //==================== useEffect==============================//
 
-    // 1. Add a `isDirty` derived value — true when local state differs from initial data.
+    // 1. Add a `isDirty` derived value â€” true when local state differs from initial data.
 //    Add this AFTER your existing state declarations inside MobileDashboardPage:
 
     const isDirty = useMemo(() => {
@@ -399,7 +133,7 @@ const MobileDashboardPage: React.FC<DashboardPageProps> = (
             name !== initialProfile.name ||
             bio  !== initialProfile.bio
 
-        // Check if links have changed — compare length first (fast), then content
+        // Check if links have changed â€” compare length first (fast), then content
         const linksChanged =
             links.length !== initialLinks.length ||
             links.some((link, i) => {
@@ -414,60 +148,14 @@ const MobileDashboardPage: React.FC<DashboardPageProps> = (
         return profileChanged || linksChanged
     }, [name, bio, links, initialProfile, initialLinks])
 // useMemo re-computes only when these values change.
-// This is important on mobile — we don't want expensive comparisons
+// This is important on mobile â€” we don't want expensive comparisons
 // running on every render.
 
 
-    // useEffect-1: Escape key closes the drawer
-    useEffect(() => {
-        if (!drawerOpen) return;
-        const handleKeyDown = (event: KeyboardEvent) => {
-            if (event.key === 'Escape') setDrawerOpen(false);
-        };
-        document.addEventListener('keydown', handleKeyDown);
-        return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [drawerOpen]);
 
-    // useEffect-2: Body scroll lock when drawer is open
-    useEffect(() => {
-        document.body.style.overflow = drawerOpen ? 'hidden' : '';
-        return () => { document.body.style.overflow = ''; };
-    }, [drawerOpen]);
 
-    // FIX 2: Guard focus management so it does NOT run on initial mount.
-    // Previously the `else` branch ran immediately on first render (drawerOpen=false),
-    // calling triggerRef.current?.focus() which caused a jarring scroll-to-top /
-    // repaint on mobile — making the drawer appear briefly open on load.
-    useEffect(() => {
-        // Skip the very first render; only manage focus on subsequent open/close.
-        if (!isMounted.current) {
-            isMounted.current = true;
-            return;
-        }
 
-        if (drawerOpen) {
-            const firstFocusable = drawerRef.current?.querySelector<HTMLElement>(
-                'button, a, input, [tabindex]:not([tabindex="-1"])'
-            );
-            firstFocusable?.focus();
-        } else {
-            triggerRef.current?.focus();
-        }
-    }, [drawerOpen]);
 
-    // FIX 3: Sync the `inert` attribute on the drawer element.
-    // `inert` makes the entire subtree invisible to assistive tech and non-interactive
-    // when closed — this is the most robust way to prevent the drawer from being
-    // "reachable" (via keyboard or screen reader) while off-screen.
-    useEffect(() => {
-        const el = drawerRef.current;
-        if (!el) return;
-        if (drawerOpen) {
-            el.removeAttribute('inert');
-        } else {
-            el.setAttribute('inert', '');
-        }
-    }, [drawerOpen]);
 
     //==================== Nav Click Handler==============================//
     const handleNavClick = useCallback((href: NavHref) => {
@@ -498,99 +186,27 @@ const MobileDashboardPage: React.FC<DashboardPageProps> = (
     const activeLabel = NAV_ITEMS.find((item) => item.href === activePath)?.label ?? 'Dashboard';
     const showFab = activePath === '/dashboard';
 
+    //==================Supabase signout handler=============//
+    const router = useRouter();
+    const supabase = createClient()
+    async function handleSignOut() {
+        const { error } = await supabase.auth.signOut()
+
+        if (error) console.error("Error signing out:", error.message)
+
+        router.push('/signin')
+        router.refresh()
+    }
+
     //==================Render: Mobile dashboard=============//
     return (
         <div
             className={clsx(
-                'min-h-screen bg-slate-50 dark:bg-slate-950',
+                'min-h-screen relative bg-slate-50 dark:bg-slate-950',
                 'flex flex-col',
                 className
             )}
         >
-            {/*================Slide-In Drawer System ==================*/}
-
-            {/*── 1. Backdrop ────────────────────────────────────────────
-                FIX 4: Added `invisible` when closed so the backdrop div is fully
-                removed from the paint layer (not just opacity-0).
-                `invisible` sets visibility:hidden which — unlike opacity:0 — also
-                hides the element from most browser hit-testing, preventing ghost
-                click interception on the content behind it.
-            */}
-            <div
-                className={clsx(
-                    'fixed inset-0 z-40',
-                    'bg-slate-900/50 dark:bg-black/60 backdrop-blur-sm',
-                    'transition-opacity duration-300',
-                    drawerOpen
-                        ? 'opacity-100 pointer-events-auto'
-                        : 'opacity-0 pointer-events-none invisible'
-                )}
-                onClick={() => setDrawerOpen(false)}
-                aria-hidden="true"
-            />
-
-            {/*── 2. Drawer Panel ────────────────────────────────────────
-                FIX 5: Added `invisible` / `visible` toggling in parallel with
-                the translate classes. This ensures the drawer is:
-                  • Visually absent (not just off-screen) when closed
-                  • Not reachable by keyboard tabbing (paired with `inert` above)
-                  • Not announced by screen readers while closed
-                The transition-[transform,visibility] ensures visibility changes
-                are still synced with the sliding animation.
-            */}
-            <div
-                ref={drawerRef}
-                className={clsx(
-                    'fixed top-0 left-0 h-full w-72 z-50',
-                    'bg-white dark:bg-slate-950',
-                    'border-r border-slate-100 dark:border-slate-800',
-                    'flex flex-col px-4 py-6',
-                    'shadow-2xl shadow-black/20',
-                    // Animation
-                    'transform transition-[transform,visibility] duration-300 ease-out',
-                    'will-change-transform',
-                    // FIX: toggle both position AND visibility together
-                    drawerOpen
-                        ? 'translate-x-0 visible'
-                        : '-translate-x-full invisible'
-                )}
-                aria-modal="true"
-                aria-label="Navigation menu"
-                role="dialog"
-            >
-                <div className="flex justify-end mb-4">
-                    <button
-                        type="button"
-                        onClick={() => setDrawerOpen(false)}
-                        className="p-2 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
-                        aria-label="Close menu"
-                    >
-                        <X className="w-6 h-6" aria-hidden="true" />
-                    </button>
-                </div>
-
-                <UserSidebarProfile
-                    name={initialProfile.name}
-                    role={initialProfile.role ?? 'Creator'}
-                    avatarSrc={initialProfile.avatarSrc}
-                    className="mb-6"
-                />
-
-                <div className="flex-1" aria-hidden="true" />
-
-                <div className="mt-auto pt-6 border-t border-slate-100 dark:border-slate-800">
-                    <Button
-                        variant="danger"
-                        type="button"
-                        fullWidth
-                        onClick={() => signOut({ redirectUrl: '/' })}
-                        leftIcon={<LogOut className="w-4 h-4" aria-hidden="true" />}
-                    >
-                        Sign Out
-                    </Button>
-                </div>
-            </div>
-            {/*================Slide-In Drawer System ==================*/}
 
             {/*================Sticky Navbar ==================*/}
             <header
@@ -598,35 +214,16 @@ const MobileDashboardPage: React.FC<DashboardPageProps> = (
                     'sticky top-0 z-30',
                     'bg-white dark:bg-slate-900',
                     'border-b border-slate-100 dark:border-slate-800',
-                    'flex items-center justify-between px-4 py-2'
+                    'flex items-center justify-between px-4 py-2 relative'
                 )}
                 role="banner"
             >
                 <div className="flex items-center gap-2">
-                    <button
-                        ref={triggerRef}
-                        type="button"
-                        onClick={() => setDrawerOpen(true)}
-                        aria-expanded={drawerOpen}
-                        aria-haspopup="dialog"
-                        aria-label="Open Navigation Menu"
-                        className={clsx(
-                            'w-8 h-8 rounded-lg',
-                            'flex items-center justify-center',
-                            'text-slate-500 dark:text-slate-400',
-                            'hover:text-slate-900 dark:hover:text-white',
-                            'hover:bg-slate-100 dark:hover:bg-slate-800',
-                            'transition-colors duration-150',
-                            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600'
-                        )}
-                    >
-                        <MenuIcon className="w-6 h-6" aria-hidden="true" />
-                    </button>
 
-                    <KnottedLogo size="sm" asMobile={true} />
+                    <KnottedLogo size="sm" asMobile={true} logoText={true} />
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="relative flex items-center gap-2">
                     <span className="text-sm font-display font-semibold text-slate-600 dark:text-slate-300">
                         {activeLabel}
                     </span>
@@ -634,10 +231,69 @@ const MobileDashboardPage: React.FC<DashboardPageProps> = (
                         name={initialProfile.name}
                         src={initialProfile.avatarSrc}
                         size="sm"
+                        onClick={handleAvatarMenuToggle}
+                        ariaLabel="Open user menu"
                     />
                 </div>
+
+                    {/*================ User Avatar Dropdown ==================*/}
+                    <AvatarMenuDropdown
+                        open={avatarMenuOpen}
+                        onClose={handleAvatarMenuClose}
+                        username={username}
+                        email={userEmail}
+                        avatarSrc={initialProfile.avatarSrc}
+                        onSignOut={handleSignOut}
+                        className={'absolute top-4 right-4'}
+                    />
             </header>
             {/*================Sticky Navbar ==================*/}
+            {/*================Publish changes when ui chges ==================*/}
+            {showFab && isDirty && (
+                <div className="sticky bottom-0 px-4 pb-2 pt-3  flex-col gap-3">
+
+
+                    {isDirty && (
+                        <div
+                            className={[
+                                'flex items-center justify-between gap-3',
+                                'px-4 py-3',
+                                'bg-white dark:bg-slate-900',
+                                'border border-brand-200 dark:border-brand-800',
+                                'rounded-full shadow-sm',
+                                // Subtle brand-tinted border signals this is an action item
+                            ].join(' ')}
+                        >
+                            {/* Unsaved indicator */}
+                            <div className="flex items-center gap-2">
+                                <div
+                                    className="w-2 h-2 rounded-full bg-amber-400 animate-pulse flex-shrink-0"
+                                    aria-hidden="true"
+                                />
+                                <span className="text-xs font-display font-semibold text-slate-600 dark:text-slate-400">
+                                    Unsaved changes
+                                </span>
+                            </div>
+
+                            {/*
+
+        */}
+                            <Button
+                                variant="primary"
+                                size="sm"
+                                loading={publishLoading}
+                                onClick={() => onPublish?.({ name, bio, links })}
+                                type="button"
+                                className="flex-shrink-0"
+                            >
+                                Publish
+                            </Button>
+                        </div>
+                    )}
+
+                </div>
+            )}
+            {/*================ Publish chnges when ui chnges==================*/}
 
             {/*================== Main Content =====================*/}
             <main
@@ -654,7 +310,7 @@ const MobileDashboardPage: React.FC<DashboardPageProps> = (
                     subLabel="Share your link with your audience"
                 />
 
-                {/*── /dashboard panel ───────────────────────────────────*/}
+                {/*â”€â”€ /dashboard panel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€*/}
                 {activePath === '/dashboard' && (
                     <>
                         <section
@@ -740,13 +396,13 @@ const MobileDashboardPage: React.FC<DashboardPageProps> = (
 
                                 {links.length === 0 && (
                                     <p className="text-sm font-body text-slate-400 dark:text-slate-500 text-center py-4">
-                                        No links yet — tap the button below to add your first one!
+                                        No links yet â€” tap the button below to add your first one!
                                     </p>
                                 )}
                             </div>
 
                             {/*
-                              Add-new-link action — moved out of the floating FAB and
+                              Add-new-link action â€” moved out of the floating FAB and
                               into the section it actually acts upon. Keeps the bottom
                               of the screen reserved for navigation + publish only.
                             */}
@@ -765,13 +421,13 @@ const MobileDashboardPage: React.FC<DashboardPageProps> = (
                     </>
                 )}
 
-                {/*── /analytics panel ───────────────────────────────────*/}
+                {/*â”€â”€ /analytics panel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€*/}
                 {activePath === '/analytics' && <AnalyticsPanel />}
 
-                {/*── /settings panel ────────────────────────────────────*/}
+                {/*â”€â”€ /settings panel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€*/}
                 {activePath === '/settings' && <SettingsPanel />}
 
-                {/*── /profile panel ─────────────────────────────────────*/}
+                {/*â”€â”€ /profile panel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€*/}
                 {activePath === '/profile' && (
                     <ViewPanel
                         username={username}
@@ -782,69 +438,7 @@ const MobileDashboardPage: React.FC<DashboardPageProps> = (
                 )}
             </main>
 
-            {/*============== Sticky Publish bar ======================*/}
-            {/*
-              Only rendered when the user has unsaved changes on the dashboard panel.
-              The Add-new-link action lives in the Active Links section now, so this
-              area is purely for save/publish state.
-            */}
-            {showFab && isDirty && (
-                <div className="sticky bottom-0 px-4 pb-4 pt-3 bg-gradient-to-t from-slate-100 dark:from-slate-950 to-transparent flex flex-col gap-3">
 
-                    {/*
-      Unsaved changes bar — only rendered when isDirty is true.
-
-      This follows the standard mobile UX pattern: don't clutter the screen
-      with a publish button until there's actually something to publish.
-      The bar slides into view the moment the user makes any change.
-
-      CSS transition on the bar itself gives the slide-in feel.
-      We use conditional rendering (not opacity/translate) here because
-      the bar takes up space — we want the FAB to move up when it appears.
-    */}
-                    {isDirty && (
-                        <div
-                            className={[
-                                'flex items-center justify-between gap-3',
-                                'px-4 py-3',
-                                'bg-white dark:bg-slate-900',
-                                'border border-brand-200 dark:border-brand-800',
-                                'rounded-2xl shadow-sm',
-                                // Subtle brand-tinted border signals this is an action item
-                            ].join(' ')}
-                        >
-                            {/* Unsaved indicator */}
-                            <div className="flex items-center gap-2">
-                                <div
-                                    className="w-2 h-2 rounded-full bg-amber-400 animate-pulse flex-shrink-0"
-                                    aria-hidden="true"
-                                />
-                                <span className="text-xs font-display font-semibold text-slate-600 dark:text-slate-400">
-            Unsaved changes
-          </span>
-                            </div>
-
-                            {/*
-          ── ATOM: Button — Publish Changes ───────────────────────────────
-          size="sm" → compact, fits inside the unsaved changes bar.
-          variant="primary" → brand-600 purple, stands out against the bar.
-          loading={publishLoading} → spinner during the async save.
-        */}
-                            <Button
-                                variant="primary"
-                                size="sm"
-                                loading={publishLoading}
-                                onClick={() => onPublish?.({ name, bio, links })}
-                                type="button"
-                                className="flex-shrink-0"
-                            >
-                                Publish
-                            </Button>
-                        </div>
-                    )}
-
-                </div>
-            )}
 
             <AddLinkModal
                 isOpen={addOpen}
@@ -854,81 +448,82 @@ const MobileDashboardPage: React.FC<DashboardPageProps> = (
 
             {/*================ Bottom Navigation ==================*/}
             {/*
-              Sits naturally at the bottom of the flex column (after <main>).
-              Because it's part of the normal flow — not fixed — the sticky FAB
-              inside <main> can keep its ORIGINAL `sticky bottom-0` behaviour
-              and float just above this bar without manual offsets.
+              Sticky wrapper — same pattern as the publish bar above.
+              It stays in the flex-column flow (so it never hides content)
+              but pins to the viewport bottom while scrolling.
+              `pointer-events-none` on the wrapper lets taps pass through
+              the empty gutter around the pill; the nav re-enables them.
             */}
-            <nav
-                aria-label="Primary mobile navigation"
+            <div
                 className={clsx(
-                    // Layout
-                    'sticky bottom-0 z-30 shrink-0',
-                    'flex items-stretch justify-around gap-1',
-                    'px-3 py-2 pt-2',
-                    'pb-[max(0.5rem,env(safe-area-inset-bottom))]',
-                    // Surface — frosted glass with a subtle top hairline + soft shadow
-                    'bg-white/90 dark:bg-slate-900/90 backdrop-blur-md',
-                    'border-t border-slate-200 dark:border-slate-800/70',
-                    'shadow-[0_-8px_24px_-16px_rgba(15,23,42,0.18)]'
+                    'sticky bottom-2 z-30 pointer-events-none',
+                    'px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-2'
                 )}
             >
-                {NAV_ITEMS.map(({ href, label, Icon }) => {
-                    const isActive = activePath === href;
-                    return (
-                        <button
-                            key={href}
-                            type="button"
-                            onClick={() => handleNavClick(href)}
-                            aria-current={isActive ? 'page' : undefined}
-                            aria-label={label}
-                            className={clsx(
-                                // Tap target — comfortably hits the 44px minimum
-                                'group relative flex-1 min-h-[3.25rem]',
-                                'flex flex-col items-center justify-center gap-1',
-                                'rounded-2xl',
-                                'transition-[color,transform] duration-200 ease-out',
-                                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-900',
-                                'active:scale-[0.94]',
-                                isActive
-                                    ? 'text-brand-600 dark:text-brand-400'
-                                    : 'text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200'
-                            )}
-                        >
-                            {/* Icon backplate — a brand-tinted pill that smoothly grows under the active tab */}
-                            <span
+                <nav
+                    aria-label="Primary mobile navigation"
+                    className={clsx(
+                        'pointer-events-auto',
+                        // Centered floating pill
+                        'mx-auto w-full max-w-lg',
+                        'flex items-stretch justify-around gap-1',
+                        'px-3 py-1.5',
+                        // Fully rounded, frosted-glass surface
+                        'rounded-full',
+                        'bg-white/90 dark:bg-slate-900/90 backdrop-blur-md',
+                        'border border-slate-200 dark:border-slate-800/70',
+                        'shadow-[0_8px_32px_-8px_rgba(15,23,42,0.35)]'
+                    )}
+                >
+                    {NAV_ITEMS.map(({ href, label, Icon }) => {
+                        const isActive = activePath === href;
+                        return (
+                            <button
+                                key={href}
+                                type="button"
+                                onClick={() => handleNavClick(href)}
+                                aria-current={isActive ? 'page' : undefined}
+                                aria-label={label}
                                 className={clsx(
-                                    'relative flex items-center justify-center',
-                                    'h-9 w-12 rounded-full',
-                                    'transition-all duration-200 ease-out',
+                                    // Tap target â€” comfortably hits the 44px minimum
+                                    'group relative flex-1 min-h-[3.25rem]',
+                                    'flex flex-col items-center justify-center gap-1',
+                                    'rounded-full',
+                                    'transition-[color,transform] duration-200 ease-out',
+                                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-900',
+                                    'active:scale-[0.94]',
                                     isActive
-                                        ? 'bg-brand-100/80 dark:bg-brand-500/15 scale-100'
-                                        : 'bg-transparent scale-90 group-hover:bg-slate-100 dark:group-hover:bg-slate-800/60'
+                                        ? 'text-brand-600 dark:text-brand-400'
+                                        : 'text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200'
                                 )}
                             >
-                                <Icon
+                                {/* Icon backplate â€” a brand-tinted pill that smoothly grows under the active tab */}
+                                <span
                                     className={clsx(
-                                        'transition-all duration-200',
-                                        isActive ? 'w-[15px] h-[15px]' : 'w-5 h-5'
+                                        'relative flex items-center justify-center',
+                                        'h-9 w-12 rounded-full',
+                                        'transition-all duration-200 ease-out',
+                                        isActive
+                                            ? 'bg-brand-100/80 dark:bg-brand-500/15 scale-100'
+                                            : 'bg-transparent scale-90 group-hover:bg-slate-100 dark:group-hover:bg-slate-800/60'
                                     )}
-                                    aria-hidden="true"
-                                    strokeWidth={isActive ? 2.4 : 2}
-                                />
-                            </span>
+                                >
+                                    <Icon
+                                        className={clsx(
+                                            'transition-all duration-200',
+                                            isActive ? 'w-[15px] h-[15px]' : 'w-5 h-5'
+                                        )}
+                                        aria-hidden="true"
+                                        strokeWidth={isActive ? 2.4 : 2}
+                                    />
+                                </span>
 
-                            <span
-                                className={clsx(
-                                    'font-display text-xs leading-none tracking-wide',
-                                    'transition-all duration-200',
-                                    isActive ? 'font-bold opacity-100' : 'font-semibold opacity-80'
-                                )}
-                            >
-                                {label}
-                            </span>
-                        </button>
-                    );
-                })}
-            </nav>
+
+                            </button>
+                        );
+                    })}
+                </nav>
+            </div>
             {/*================ Bottom Navigation ==================*/}
         </div>
     );

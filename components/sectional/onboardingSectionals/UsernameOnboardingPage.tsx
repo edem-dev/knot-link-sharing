@@ -54,7 +54,7 @@ const UsernameOnboardingPage:React.FC<UsernameOnboardingPageProps> = ({
             try {
                 // Real API call to GET /api/username
                 const res = await fetch(
-                    `/api/username?u=${encodeURIComponent(username)}`
+                    `/api/username?username=${encodeURIComponent(username)}`
                 )
                 const data = await res.json()
 
@@ -86,7 +86,7 @@ const UsernameOnboardingPage:React.FC<UsernameOnboardingPageProps> = ({
     //Form Submit Handler ---------------------------------------->
     const handleSubmit = (e:React.FormEvent<HTMLFormElement>) =>{
         e.preventDefault();
-    //     Guard the submission-> If the [get-username] is available, then proceed.
+    //     Guard the submission-> If the [getusername] is available, then proceed.
         if (availability !== 'available') return;
          onClaim?.(username);
     };

@@ -1,7 +1,6 @@
 // app/layout.tsx
 import "./globals.css";
 import React from 'react';
-import { ClerkProvider } from '@clerk/nextjs';
 import {DM_Sans, Plus_Jakarta_Sans} from 'next/font/google';
 import {Metadata} from "next";
 
@@ -63,11 +62,11 @@ export const metadata: Metadata = {
 
 const RootLayout: React.FC<LayoutProps> = ({ children }) => {
     return (
-        <ClerkProvider>
+        // <ClerkProvider>
             <html lang="en" className={`${dmSans.variable} ${plusJakartaSans.variable}`}>
             <body>{children}</body>
             </html>
-        </ClerkProvider>
+        // </ClerkProvider>
     );
 }
 

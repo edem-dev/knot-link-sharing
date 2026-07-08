@@ -59,10 +59,10 @@ const LandingNavbar: React.FC<LandingNavbarProps> = ({
                 </ul>
 
                 <div className="max-md:hidden flex items-center gap-3">
-                    <NavLink href="/sign-in" active={activePath === '/sign-in'}>
+                    <NavLink href="/signin" active={activePath === '/signin'}>
                         Sign in
                     </NavLink>
-                    <Button variant="primary" size="sm" onClick={() => router.push('/sign-up')}>
+                    <Button variant="primary" size="sm" onClick={() => router.push('/signup')}>
                         Get Started
                     </Button>
                 </div>
@@ -118,7 +118,7 @@ const LandingNavbar: React.FC<LandingNavbarProps> = ({
                         variant="ghost"
                         size="md"
                         fullWidth
-                        onClick={() => handleNavigate('/sign-in')}
+                        onClick={() => handleNavigate('/signin')}
                     >
                         Sign in
                     </Button>
@@ -126,7 +126,7 @@ const LandingNavbar: React.FC<LandingNavbarProps> = ({
                         variant="primary"
                         size="md"
                         fullWidth
-                        onClick={() => handleNavigate('/sign-up')}
+                        onClick={() => handleNavigate('/signup')}
                     >
                         Get Started
                     </Button>
