@@ -2,7 +2,7 @@
   "name": "Knotted",
   "short_name": "Knotted",
   "description": "Built for the modern web.",
-  "start_url": "/",
+  "start_url": "/dashboard?utm_source=pwa",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",

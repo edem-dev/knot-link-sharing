@@ -6,7 +6,7 @@ import { GripVertical, Trash2 } from 'lucide-react';
 export interface LinkRowData {
     /** Unique identifier for this link — used as the React `key` prop */
     id: string;
-    /** Display title shown on the public profile page */
+    /** Display title shown on the public profile route */
     title: string;
     /** Destination URL */
     url: string;

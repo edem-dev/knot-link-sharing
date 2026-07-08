@@ -99,7 +99,7 @@ const AddLinkModal:React.FC<AddLinkModalProps> = (
             isOpen={isOpen}
             onClose={onClose}
             title={"Add new link"}
-            description={"This link will appear on your knotted page"}
+            description={"This link will appear on your knotted route"}
             size={"md"}
             footer={
                 <>

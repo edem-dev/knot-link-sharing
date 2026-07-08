@@ -1,33 +1,56 @@
-// app/api/profile/avatar/route.ts
-import { auth } from '@clerk/nextjs/server'
-import connectDB from '@/lib/mongodb'
-import User from '@/lib/models/User'
+import { createClient} from '@/lib/supabase/server'
+import {request} from "node:http";
 
-// PATCH /api/profile/avatar
-// Updates only the avatar URL after a successful Cloudinary upload.
-// This is separate from PUT /api/profile because avatar uploads happen
-// immediately on file select — independent of the "Publish Changes" flow.
-export async function PATCH(req: Request) {
-    const { userId } = await auth()
-    if (!userId) {
+//PATCH /api/profile/avatar -> This updates the profile row with the user's avatar
+
+export async function PATCH(request: Request) {
+    const supabase = await createClient()
+//================== Authenticate the user ======================
+
+    const {
+        data: {user},
+        error: authError
+    } = await supabase.auth.getUser()
+
+    if (authError || !user) {
         return Response.json({ error: 'Unauthorized' }, { status: 401 })
     }
+//================== Parse the resqueted body======================
+    let body: { avatarUrl?: unknown }
 
-    const { avatarUrl } = await req.json() as { avatarUrl: string }
-
-    if (!avatarUrl || typeof avatarUrl !== 'string') {
-        return Response.json({ error: 'avatarUrl is required' }, { status: 400 })
+    try{
+        body = await request.json()
+    }catch {
+        return Response.json({ error: 'Invalid request body' }, { status: 400 })
     }
 
-    await connectDB()
+//==========================Validate=================================
+    const {avatarUrl} = body
 
-    await User.findOneAndUpdate(
-        { clerkUserId: userId },
-        { $set: { avatarUrl } }
-    )
+    if (!avatarUrl || typeof avatarUrl !== 'string' || avatarUrl.trim() === '') {
+        return Response.json(
+            { error: 'avatarUrl must be a non-empty string' },
+            { status: 400 }
+        )
+    }
 
-    // Return as avatarSrc so the UI can directly update its state:
-    // const { avatarSrc } = await res.json()
-    // setAvatarSrc(avatarSrc)
-    return Response.json({ success: true, avatarSrc: avatarUrl })
+//==========================Update the url=================================
+    const {data: updatedProfile, error:updateError} = await supabase
+        .from('profiles')
+        .update({avatar_url: avatarUrl.trim()})
+        .eq('id', user.id)
+        .select('avatar_url')
+        .single()
+
+    if (updateError || !updatedProfile) {
+        console.error('[PATCH /api/profile/avatar] Update failed:', updateError)
+        return Response.json(
+            { error: 'Could not update avatar' },
+            { status: 500 }
+        )
+    }
+
+//======================== Response==============================
+    return Response.json({ success: true, avatarSrc: updatedProfile.avatar_url})
+
 }

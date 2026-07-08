@@ -28,7 +28,7 @@ const PageURLBanner:React.FC<PageURLBannerProps> = ({
             await navigator.clipboard.writeText(`https://${url}`)
         }catch{
             // Clipboard API can fail if:
-            // - The page is not focused (some browsers block it)
+            // - The route is not focused (some browsers block it)
             // - The user has denied clipboard permissions
             // We fail silently — the URL is visible and the user can copy it manually.
         }

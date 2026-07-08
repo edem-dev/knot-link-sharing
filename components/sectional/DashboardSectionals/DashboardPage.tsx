@@ -1,9 +1,14 @@
-'use client';
+﻿'use client';
 import React, {useCallback, useState} from 'react';
+import {createClient} from "@/lib/supabase/client";
+
 import Link from "next/link";
 
 //Sectional Components---------------------------------------------------//
 import DashboardSidebar from "@/components/sectional/DashboardSectionals/DashboardSidebar";
+import AnalyticsPanel from "@/components/sectional/DashboardSectionals/AnalyticsPanel";
+import SettingsPanel from "@/components/sectional/DashboardSectionals/SettingsPanel";
+import ViewPanel from "@/components/sectional/DashboardSectionals/ViewPanel";
 
 //--Molecular Components -------------------------------------------------//
 import FormField from "@/components/molecular/Formfield";
@@ -23,24 +28,27 @@ import {LinkRowData} from "@/components/molecular/EditableLinkRow";
 import {
     BarChart2,
     Eye,
-    Globe,
     LayoutDashboard,
-    MousePointerClick,
     Plus,
     PlusIcon,
-    Settings, TrendingUp,
+    Settings,
     User,
-    Users
 } from "lucide-react";
 import PageURLBanner from "@/components/molecular/PageURLBanner";
+import {useRouter} from "next/navigation";
+import {router} from "next/client";
 
-//==================Clerk Sin out import===========================//
-import { useClerk } from '@clerk/nextjs'
+//================== Supabase sign out handler===========================//
+
+
+
+
+
 
 //Nav Items --------------------------------------------------------------//
 const NAV_ITEMS = [
     { href: '/dashboard', label: 'Dashboard',    Icon: LayoutDashboard },
-    { href: '/profile',   label: 'View my page', Icon: Eye             },
+    { href: '/profile',   label: 'View my route', Icon: Eye             },
     { href: '/analytics', label: 'Analytics',    Icon: BarChart2       },
     { href: '/settings',  label: 'Settings',     Icon: Settings        },
 ] as const;
@@ -52,7 +60,7 @@ type NavHref = (typeof  NAV_ITEMS)[number]["href"]
 
 //--Dashboard Page Props------------------------------------------------------//
 export interface DashboardPageProps{
-    // Profile data that is loaded server-side. The page mounts it to the client
+    // Profile data that is loaded server-side. The route mounts it to the client
     //via useState
     initialProfile?: {
         name:string;
@@ -81,8 +89,14 @@ export interface DashboardPageProps{
     //An extra tailwind class for additional styling
     className?:string;
     //Avatar uploading props
-    onAvatarEdit?:    () => void       // ← add this
+    onAvatarEdit?:    () => void       // â† add this
     avatarUploading?: boolean
+
+    //=========== User identity / session ============================//
+    // Email address shown inside the avatar dropdown menu (mobile navbar).
+    userEmail?: string;
+    // Called when the user clicks "Sign Out" inside the avatar dropdown.
+    onSignOut?: () => void;
 }
 
 // ------------------------------------------------------------------------
@@ -102,7 +116,7 @@ interface EditorPanelProps{
     onAddOpen:()=> void;
     avatarName:string;
     avatarSrc?:string;
-    onAvatarEdit?:    () => void       // ← add this
+    onAvatarEdit?:    () => void       // â† add this
     avatarUploading?: boolean
 }
 
@@ -233,7 +247,7 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
                     <button
                         type={"button"}
                         onClick={onAddOpen}
-                        aria-label={"Add Link new link to you page"}
+                        aria-label={"Add Link new link to you route"}
                         className={[
                             'flex flex-col items-center justify-center gap-2 w-full py-8',
                             'border-2 border-dashed border-slate-200 dark:border-slate-700',
@@ -253,371 +267,16 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
     )}
 //===========================Editor Panel ==========================================//
 
-//===========================Analytics Panel ==========================================//
-//This panel is shown when 'activePath === "/analytics"'. Contains hardcoded data
-//TODO:Replace hardcoded data with actual analytics data from API
+//===========================Removed Panels =========================================//
+// `AnalyticsPanel`, `SettingsPanel` and `ViewPanel` were previously declared inline
+// in this file AND in MobileDashboardPage.tsx (identical code). They have been
+// extracted into shared components in this same folder:
+//   - ./AnalyticsPanel.tsx
+//   - ./SettingsPanel.tsx
+//   - ./ViewPanel.tsx
+// They are imported at the top of this file.
+//===================================================================================//
 
-
-
-const AnalyticsPanel:React.FC = () => {
-    //===================Overview stats data ==========================//
-    const overviewStats = [
-        { label: 'Total Views',  value: '12,847', delta: '+12% this week', Icon: Globe             },
-        { label: 'Link Clicks',  value: '3,291',  delta: '+8% this week',  Icon: MousePointerClick },
-        { label: 'Followers',    value: '1,024',  delta: '+24 this week',  Icon: Users             },
-        { label: 'Top Link CTR', value: '34.2%',  delta: 'Portfolio',      Icon: TrendingUp        },
-    ]
-
-    //================== Top Links ====================================//
-    const topLinks = [
-        { title: 'Portfolio Website', clicks: 892, pct: 72 },
-        { title: 'Latest Case Study', clicks: 421, pct: 34 },
-        { title: 'YouTube Channel',   clicks: 210, pct: 17 },
-    ];
-
-
-    return (
-        <div className={"flex flex-col gap-6"}>
-        {/* ================== Overview Stats Section ==================*/}
-            <section
-                className={[
-                    'bg-white dark:bg-slate-900',
-                    'rounded-3xl border border-slate-100',
-                    'dark:border-slate-800 p-6',
-                ].join(' ')}
-            >
-                <h2
-                    id={"analytics-overview-heading"}
-                    className={[
-                        'font-display font-bold text-base',
-                        'text-slate-800 dark:text-white',
-                        'flex items-center gap-2 mb-6',
-                    ].join(' ')}
-                >
-                    <BarChart2 className={"w-5 h-5 text-brand-500"} aria-hidden={"true"}/>
-                    Overview
-                </h2>
-
-            {/*==============================Analytics Data ==========================*/}
-                <div className={"grid grid-cols-2 gap-4"}>
-                    {overviewStats.map(({ label, value, delta, Icon}) => (
-                        <div
-                            key={label}
-                            className={[
-                                'flex flex-col  gap-2',
-                                'bg-slate-50 dark:bg-slate-800',
-                                'rounded-2xl p-4',
-                            ].join(' ')}
-                        >
-                            <div className={"flex items-center gap-2"}>
-                                <Icon className={"w-5 h-5 text-brand-500 dark:text-brand-400"} aria-hidden={"true"}/>
-                                <span
-                                    className={[
-                                        'font-display font-semibold text-xs',
-                                        'uppercase tracking-widest text-slate-500 dark:text-slate-400',
-                                    ].join(' ')}
-                                >
-                                    {label}
-                                </span>
-                            </div>
-                            <p
-                                className={[
-                                    'font-display font-extrabold text-2xl',
-                                    'text-slate-900 dark:text-white',
-                                ].join(' ')}
-                            >
-                                {value}
-                            </p>
-                            <p className={"text-xs font-body text-slate-400 dark:text-slate-500"}>{delta}</p>
-                        </div>
-                    ))}
-                </div>
-            </section>
-
-        {/*============================= Top Links Stats Section============================*/}
-            <section
-                aria-labelledby={"analytics-top-links-heading"}
-                className={[
-                    'bg-white dark:bg-slate-900',
-                    'rounded-3xl border border-slate-100',
-                    'dark:border-slate-800 p-6',
-                ].join(' ')}
-            >
-                {/*=====================Top Links Heading ========================*/}
-                <h2
-                    id={"analytics-top-links-heading"}
-                    className={[
-                        'font-display font-bold text-base',
-                        'text-slate-800 dark:text-white mb-6',
-
-                    ].join(' ')}
-                >
-                    Top Links
-                </h2>
-                {/*======================Top Links Content=====================*/}
-                <div className={"flex flex-col gap-4"}>
-                    {topLinks.map(({ title, clicks, pct }) => (
-                        <div key={title}>
-                            <div className={"flex items-center justify-between mb-2"}>
-                                <span
-                                    className={[
-                                        'text-sm font-body font-medium ',
-                                        'text-slate-700 dark:text-slate-200',
-                                        'truncate',
-                                    ].join(' ')}
-                                >
-                                    {title}
-                                </span>
-                                <span
-                                    className={"text-sm font-body text-slate-500 flex-shrink-0 ml-3"}
-                                >
-                                    {clicks} clicks
-                                </span>
-                            </div>
-                        {/*=====================Progress Bar =======================*/}
-                            <div
-                                className={"h-1.5 w-full bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden"}
-                            >
-                                <div
-                                    className={"h-full bg-brand-600 rounded-full transition-all duration-500"}
-                                    style={{ width: `${pct}%` }}
-                                    // inline style — Tailwind can't generate arbitrary % widths
-                                    // from dynamic values. Inline style is correct here.
-                                    role={"progressbar"}
-                                    aria-valuenow={pct}
-                                    aria-valuemin={0}
-                                    aria-valuemax={100}
-                                    aria-label={`${title}: ${pct}% of clicks`}
-                                />
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </section>
-        </div>
-    );
-};
-//===========================Analytics Panel ==========================================//
-
-
-//===========================Settings Panel ==========================================//
-// Shows when activePath ====/'settings'
-const SettingsPanel:React.FC = () => (
-    <div className={"flex flex-col gap-6"}>
-    {/*=========================Account Settings Section==========================*/}
-        <section
-            className={[
-                'bg-white dark:bg-slate-900',
-                'rounded-3xl border border-slate-100',
-                'dark:border-slate-800 p-6',
-            ].join(' ')}
-        >
-            <h2
-                id={"settings-heading"}
-                className={`font-display font-bold text-base 
-                    text-slate-800 dark:text-white flex items-center gap-2 mb-6`}
-            >
-                <Settings className="w-5 h-5 text-brand-500" aria-hidden="true" />
-                Account Settings
-            </h2>
-
-            {/*========================Settings Section ==========================*/}
-            <div className={"flex flex-col gap-4"}>
-                {/*
-                  MOLECULE: FormField + ATOM: Input — Email =======================
-                 defaultValue → uncontrolled for this demo.
-                    //TODO:In production: make this controlled with its own useState.
-                */}
-
-                <FormField label={"Email Address"} htmlFor={"settings-email"}>
-                    <Input
-                        id={"settings-email"}
-                        type={"email"}
-                        value={""}
-                        defaultValue={"alex@example.com"}
-                        placeholder={"Your email address"}
-                        autoComplete={"email"}
-                    />
-                </FormField>
-
-                {/*
-                    ==== MOLECULE: FormField + ATOM: Input — Email =======================
-                    defaultValue → uncontrolled for this demo.
-                    //TODO: In production: make this controlled with its own useState.
-                */}
-                <FormField label={"Username"} htmlFor={"settings-[get-username]"}>
-                    <Input
-                        id={"settings-[get-username]"}
-                        type={"text"}
-                        defaultValue={"alexrivers"}
-                        prefix={"knottted.vercel.app/"}
-                        placeholder={"yourname"}
-                        autoComplete={"off"}
-                        spellCheck={false}
-                    />
-                </FormField>
-
-                {/*======================Save Changes Button======================*/}
-                <Button
-                    variant={"primary"}
-                    size={"md"}
-                    type={"button"}
-                    onClick={() => {/* TODO: PATCH /api/settings */ }}
-                >
-                    Save Changes
-                </Button>
-            </div>
-        </section>
-        {/*===============================Danger Zone============================= */}
-        <section
-            className={[
-                "bg-white dark:bg-slate-900",
-                "rounded-3xl border border-red-100",
-                "dark:border-red-900/50 p-6",
-            ].join(" ")}
-            aria-labelledby={"danger-zone-heading"}
-        >
-        {/*=========================Danger Zone Heading=========================*/}
-            <h2
-                id={"danger-zone-heading"}
-                className={"font-display font-bold text-base text-red-600 dark:text-red-400 mb-2"}
-            >
-                Danger Zone
-            </h2>
-            <p className={"font-body text-sm text-slate-500 dark:text-slate-400 leading-relaxed mb-4"}>
-                Permanently delete your account and all your data. This cannot be undone.
-            </p>
-
-            <Button
-                variant={"danger"}
-                size={"md"}
-                type={"button"}
-                onClick={() => { /* TODO: open confirmation Modal → DELETE /api/account */ }}
-            >
-                Delete Account
-            </Button>
-        </section>
-    </div>
-);
-
-//===========================Settings Panel ==========================================//
-
-
-//===========================View  Panel ==========================================//
-// =================View panel props ================================================//
-interface ViewPagePanelProps {
-    username:   string;
-    links:      LinkRowData[];
-    name:       string;
-    avatarSrc?: string;
-}
-
-
-
-const ViewPanel: React.FC<ViewPagePanelProps> = ({
-    username,
-    links,
-    name,
-    avatarSrc,
-}) => {
-    return (
-        <div
-            className={[
-                "bg-white dark:bg-slate-900",
-                "rounded-3xl border border-slate-100",
-                "dark:border-slate-800 p-6",
-            ].join(" ")}
-            aria-labelledby={"view-page-heading"}
-        >
-            {/*================= View Page Heading=================*/}
-            <div className={"flex items-center justify-between mb-6"}>
-                <h2
-                    id={"view-page-heading"}
-                    className={[
-                        "font-display font-bold text-base",
-                        "text-slate-800 dark:text-white",
-                        "flex items-center gap-2",
-                    ].join(" ")}
-                >
-                    <Eye className={"w-5 h-5 text-brand-500"} aria-hidden={"true"} />
-                    Your Public Page
-                </h2>
-                {/*=========================User's Public Link======================*/}
-                <Link
-                    href={`https://knottted.vercel.app/${username}`}
-                    target={"_blank"}
-                    rel={"noopener noreferrer"}
-                    className={[
-                        "inline-flex items-center gap-2",
-                        "px-3 py-1.5",
-                        "text-sm font-medium",
-                        "text-brand-600 bg-brand-50 dark:bg-brand-900/50",
-                        "rounded-full",
-                    ].join(" ")}
-                    >
-                    Open in new tab →
-                </Link>
-            </div>
-
-            {/* Embedded preview container */}
-            <div className="flex flex-col items-center py-8 border border-slate-100 dark:border-slate-800 rounded-2xl bg-slate-50 dark:bg-slate-950">
-
-                {/*
-                ── ATOM: Avatar ─────────────────────────────────────────────────────
-
-                size="2xl" → 112px — matches the real PublicProfilePage avatar size.
-                No editable prop — this is a read-only preview. The edit surface is
-                back in Editor Panel where Avatar has editable=true.
-
-                This avatar updates live when the user changes their profile photo
-                and publishes, because it receives avatarSrc from the same prop.
-                */}
-                <Avatar
-                    name={name}
-                    src={avatarSrc}
-                    size={"2xl"}
-                    className={"mb-4"}
-                />
-
-                <h3 className={"font-display font-extrabold text-xl text-slate-900 dark:text-white mb-1"}>
-                    {name}
-                </h3>
-
-                {/* Preview link list */}
-                <div className={"w-full max-w-xs flex flex-col gap-2 px-4"}>
-                    {links.length > 0
-                        ? links.map((link) => (
-                            <div
-                                key={link.id}
-                                className={[
-                                            "flex items-center",
-                                            "justify-between px-4 py-3 bg-white" ,
-                                            "dark:bg-slate-900 rounded-xl border",
-                                            "border-slate-200 dark:border-slate-700"
-                                ].join(" ")}
-                            >
-              <span className={"text-sm font-display font-medium text-slate-800 dark:text-white truncate"}>
-                {link.title || 'Untitled link'}
-              </span>
-                                <span className={"text-slate-400 ml-2 shrink-0 text-sm"}>
-                                    →
-                                </span>
-                            </div>
-                        ))
-                        : (
-                            <p className={"text-sm font-body text-slate-400 text-center py-4"}>
-                                No links yet — add some in the Dashboard tab.
-                            </p>
-                        )
-                    }
-                </div>
-
-            </div>
-        </div>
-    );
-};
-
-// =================View Panel ================================================//
 
 
 
@@ -636,15 +295,12 @@ const DashboardPage:React.FC<DashboardPageProps> = ({
                                                         onPublish,
                                                         publishLoading = false,
                                                         className = '',
-                                                        onAvatarEdit,        // ← add
-                                                        avatarUploading,     // ← add
+                                                        onAvatarEdit,        // â† add
+                                                        avatarUploading,     // â† add
                                                     }) => {
 
-    const { signOut } = useClerk();
 
-    const handleSignOut = useCallback(() => {
-        signOut({ redirectUrl: '/' });
-    }, [signOut]);
+
 
     //================== Active Panel State==========================//
     const [activePath, setActivePath] = useState<NavHref>("/dashboard")
@@ -680,9 +336,9 @@ const DashboardPage:React.FC<DashboardPageProps> = ({
 
     const handleAddLink = useCallback(
         (newLink: Omit<LinkRowData, 'id'>) => {
-            // Omit<LinkRowData, 'id'> → AddLinkModal passes { title, url } without id.
+            // Omit<LinkRowData, 'id'> â†’ AddLinkModal passes { title, url } without id.
             // crypto.randomUUID() generates a cryptographically random UUID string.
-            // id generation lives HERE — the single place that owns the links state.
+            // id generation lives HERE â€” the single place that owns the links state.
             setLinks((prev) => [
                 ...prev,
                 { ...newLink, id: crypto.randomUUID() },
@@ -697,10 +353,10 @@ const DashboardPage:React.FC<DashboardPageProps> = ({
     const handleCopyUrl = useCallback(async () => {
         try {
             await navigator.clipboard.writeText(`https://knottted.vercel.app/${username}`);
-        } catch { /* silent fail — URL is visible on screen */ }
+        } catch { /* silent fail â€” URL is visible on screen */ }
         setUrlCopied(true);
         setTimeout(() => setUrlCopied(false), 2000);
-    }, [username]); // [get-username] IS a dep — changing it changes the URL to copy
+    }, [username]); // [getusername] IS a dep â€” changing it changes the URL to copy
     //====================== Handle URL Copy=========================//
 
     //======================PANEL ROUTING==================================//
@@ -741,19 +397,32 @@ const DashboardPage:React.FC<DashboardPageProps> = ({
     const activeLabel =
         NAV_ITEMS.find((item)=> item.href=== activePath)?.label ?? 'Dashboard';
 
-    // Record<NavHref, string> → TypeScript enforces ALL four keys are present.
-    // Better than a switch or if/else — adding a new panel causes a TS error
+    // Record<NavHref, string> â†’ TypeScript enforces ALL four keys are present.
+    // Better than a switch or if/else â€” adding a new panel causes a TS error
     // reminding you to add its subtitle too.
     const panelSubtitles: Record<NavHref, string> = {
         '/dashboard': 'Personalize your digital identity',
-        '/profile':   'Preview your public Knotted page',
+        '/profile':   'Preview your public Knotted route',
         '/analytics': 'Track your audience and engagement',
         '/settings':  'Manage your account preferences',
     };
     //======================PANEL ROUTING==================================//
 
+
+    //======================Sign-out handler==================================//
+    const router = useRouter();
+    const supabase = createClient()
+    async function handleSignOut() {
+        const { error } = await supabase.auth.signOut()
+
+        if (error) console.error("Error signing out:", error.message)
+
+        router.push('/signin')
+        router.refresh()
+    }
+
     //======================================================================//
-    //====================== Render page====================================/
+    //====================== Render route====================================/
     //======================================================================//
 
     return (
@@ -771,7 +440,7 @@ const DashboardPage:React.FC<DashboardPageProps> = ({
                 }}
                 activePath={activePath}
                 onNavChange={(href) => setActivePath(href as NavHref)}
-                // `as NavHref` — DashboardSidebar types onNavChange as (href: string) => void.
+                // `as NavHref` â€” DashboardSidebar types onNavChange as (href: string) => void.
                 // We assert it as NavHref because we know only NAV_ITEMS hrefs are passed.
                 onSignOut={handleSignOut}
             />

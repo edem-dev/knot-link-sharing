@@ -21,7 +21,7 @@ export async function POST(req: Request) {
     await connectDB()
 
     // Guard 1 — user already has a MongoDB document.
-    // Handles the case where the user refreshes the onboarding page after
+    // Handles the case where the user refreshes the onboarding route after
     // already submitting. Return the existing doc so the UI can redirect.
     const existing = await User.findOne({ clerkUserId: userId })
     if (existing) {

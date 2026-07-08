@@ -75,7 +75,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
 
             {/*    CTA Buttons row */}
                 <div className="flex flex-col sm:flex-row items-center gap-3 mb-16">
-                    <Button onClick={() => router.push('/sign-up')} variant="primary" size="lg">
+                    <Button onClick={() => router.push('/signup')} variant="primary" size="lg">
                         Get Started — it&apos;s free
                         {/* &apos; is the HTML entity for an apostrophe — avoids JSX parsing issues */}
                     </Button>

@@ -1,73 +1,80 @@
-// app/[username]/page.tsx
-import { notFound } from 'next/navigation'
-import connectDB from '@/lib/mongodb'
-import User from '@/lib/models/User'
-// import { PublicProfilePage } from '@/components/sectional/PublicProfilePage'
+import {cache} from "react";
+import {notFound} from "next/navigation";
+import type {Metadata} from "next";
+import {createClient} from "@/lib/supabase/server";
 import PublicProfilePage from "@/components/sectional/UserSectionals/PublicProfilePage";
 
-export default async function PublicProfile({
-                                                params,
-                                            }: {
-    params: Promise<{ username: string }>  // ← now a Promise
-}) {
-    const { username } = await params       // ← must be awaited
+//----- Cached data fetcher for the profile page -----//
+const getProfile = cache(async (username: string) => {
+    const supabase = await createClient();
+    const {data} = await supabase
+        .from('profiles')
+        .select('*, links(*)')
+        .eq('username', username)
+        .order('sort_order', {referencedTable: 'links'})
+        .single()
 
-    await connectDB()
+    return data
+})
 
-    const user = await User
-        .findOne({ username: username.toLowerCase() })
-        .lean()
-
-    if (!user) notFound()
-
-    const typedUser = user as {
-        displayName: string
-        username:    string
-        role:        string
-        bio:         string
-        avatarUrl:   string
-        links:       { _id: any; title: string; url: string; order: number; isActive: boolean }[]
-    }
-
-    return (
-        <PublicProfilePage
-            name={typedUser.displayName || typedUser.username}
-            tagline={`@${typedUser.username}`}
-            bio={typedUser.bio}
-            avatarSrc={typedUser.avatarUrl}
-            links={typedUser.links
-                .filter(l => l.isActive)
-                .sort((a, b) => a.order - b.order)
-                .map(link => ({
-                    id:    link._id.toString(),
-                    title: link.title,
-                    href:  link.url,
-                }))}
-            showBranding={true}
-            stats={{
-                likes:  '0',
-                shares: '0',
-            }}
-        />
-    )
+//--------- Types ----------------------------------//
+interface Props {
+    params: Promise <{username: string}>
 }
 
-export async function generateMetadata({
-                                           params,
-                                       }: {
-    params: Promise<{ username: string }>  // ← now a Promise
-}) {
-    const { username } = await params       // ← must be awaited
+//---- SEO Metadata---------------------------------------//
+export async function generateMetadata({params}: Props): Promise<Metadata> {
+    const {username: rawUsername} = await params
+    const username = rawUsername.toLowerCase()
+    const profile = await getProfile(username)
 
-    await connectDB()
-    const user = await User
-        .findOne({ username: username.toLowerCase() })
-        .lean() as { displayName?: string; bio?: string } | null
+    if (!profile) return {title: 'Profile not Found | Knotted'}
 
-    if (!user) return { title: 'Not found | Knotted' }
+    const displayName = profile.display_name || profile.username
 
     return {
-        title:       `${user.displayName || username} | Knotted`,
-        description: user.bio || `Check out ${username}'s Knotted page.`,
+        title: `${displayName} | Knotted`,
+        description: profile.bio || `Check out ${displayName}'s Knotted page.`,
+        openGraph: {
+            title: `${displayName} | Knotted`,
+            description: profile.bio || `Check out ${displayName}'s Knotted page.`,
+            images: profile.avatar_url ? [profile.avatar_url] : [],
+        },
     }
+}
+
+//------- Page Components ----------------------------------//
+export default async function PublicProfile({params}: Props) {
+    const { username: rawUsername } = await params
+    const username = rawUsername.toLowerCase()
+
+    const profile = await getProfile(username)
+
+    if (!profile) notFound()
+
+    // ── Filter active links ────────────────────────────────────────────────────
+    // RLS handles this for anonymous visitors automatically — but the owner
+    // visiting their own public page while signed in would see all links
+    // through RLS (including inactive ones). Filtering explicitly here
+    // guarantees the public view always shows only active links, regardless
+    // of who's visiting.
+    const activeLinks = profile.links
+        .filter((link) => link.is_active)
+        .map((link) => ({
+            id:    link.id,
+            title: link.title,
+            href:  link.url,
+            // icon and highlighted not yet supported — post-MVP feature
+        }))
+
+    return(
+        <PublicProfilePage
+            name={profile.display_name || profile.username}
+            username={`@${username}`}
+            bio={profile.bio || undefined}
+            avatarSrc={profile.avatar_url || undefined}
+            links={activeLinks}
+            showBranding={profile.role === 'free'}
+        />
+    )
 }

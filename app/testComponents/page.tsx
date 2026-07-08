@@ -39,7 +39,7 @@ import PageUrlBanner from "@/components/molecular/PageURLBanner";
 
 
 
-const page = () => {
+const route = () => {
 
     const [bio, setBio] = React.useState("");
     const [open, setOpen] = React.useState(false);
@@ -226,7 +226,7 @@ const page = () => {
                 <div className={"flex justify-center items-center flex-row shrink-0 gap-2"}>
                     {/*<FeatureCard*/}
                     {/*     icon={<AtSign className="w-6 h-6" />}*/}
-                    {/*     title="Custom [get-username]"*/}
+                    {/*     title="Custom [getusername]"*/}
                     {/*     description="Claim your unique URL in seconds."*/}
                     {/*/>*/}
                     {/*<FeatureCard*/}

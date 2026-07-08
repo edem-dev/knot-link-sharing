@@ -25,7 +25,7 @@ export interface PublicLink {
 export interface PublicProfilePageProps {
     avatarSrc?: string;
     name?: string;
-    tagline?: string;
+    username?: string;
     location?: string;
     links: PublicLink[];
     bio?: string;
@@ -41,7 +41,7 @@ export interface PublicProfilePageProps {
 const PublicProfilePage:React.FC<PublicProfilePageProps> = ({
     avatarSrc,
     name,
-    tagline,
+    username,
     location,
     links,
     showBranding,
@@ -66,7 +66,7 @@ const PublicProfilePage:React.FC<PublicProfilePageProps> = ({
                     src={avatarSrc}
                     className={"mb-5"}
                 />
-            {/*    Profile name -> The page's primary heading*/}
+            {/*    Profile name -> The route's primary heading*/}
                 <h1
                     className={[
                         'font-display font-extrabold mb-1',
@@ -82,7 +82,7 @@ const PublicProfilePage:React.FC<PublicProfilePageProps> = ({
                         'mb-3',
                     ].join(' ')}
                 >
-                    {tagline}
+                    {username}
                 </p>
             {/*    Conditionally rendered bio---------------------*/}
                 {bio && (

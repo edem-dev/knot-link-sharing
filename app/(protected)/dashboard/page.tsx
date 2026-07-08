@@ -1,86 +1,61 @@
-// app/(protected)/dashboard/page.tsx
-import { auth } from '@clerk/nextjs/server'
-import { redirect } from 'next/navigation'
-import { headers } from 'next/headers'
-import { revalidatePath } from 'next/cache'
-import connectDB from '@/lib/mongodb'
-import User from '@/lib/models/User'
-import DashboardClient from '@/components/sectional/DashboardSectionals/DashboardClient'
+import { createClient } from '@/lib/supabase/server'
+import { redirect }     from 'next/navigation'
+import DashboardClient  from '@/components/sectional/DashboardSectionals/DashboardClient'
 
+// SERVER COMPONENT — queries Supabase directly before any HTML is sent.
+// Cannot define event handlers or use hooks — DashboardClient owns those.
 export default async function DashboardPage() {
-    const { userId } = await auth()
-    if (!userId) redirect('/sign-in')
+    const supabase = await createClient()
 
-    await connectDB()
-    const user = await User.findOne({ clerkUserId: userId }).lean()
-    if (!user) redirect('/username')
+    // ── Verify session ────────────────────────────────────────────────────────
+    // getUser() re-validates against Supabase Auth — not just the cookie value.
+    // proxy.ts should have already redirected unauthenticated users, but this
+    // is a second, server-authoritative check.
+    const {
+        data: { user },
+        error: authError,
+    } = await supabase.auth.getUser()
 
-    const typedUser = user as {
-        displayName: string
-        bio:         string
-        role:        string
-        avatarUrl:   string
-        username:    string
-        links:       { _id: any; title: string; url: string; order: number }[]
-    }
+    if (authError || !user) redirect('/sign-in')
 
+    // ── Fetch profile + links in one round trip ───────────────────────────────
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('*, links(*)')
+        .eq('id', user.id)
+        .order('sort_order', { referencedTable: 'links' })
+        .single()
+
+    // Authenticated but no profile row — onboarding was never completed.
+    // proxy.ts catches most of these via the metadata flag, but the database
+    // row is the authoritative source.
+    if (!profile) redirect('/onboarding')
+
+    // ── Map DB shape → UI shape ───────────────────────────────────────────────
+    // display_name → name,  avatar_url → avatarSrc
+    // email comes from auth user (not stored in profiles table)
+    // bio was missing from the original version — added here
     const initialProfile = {
-        name:      typedUser.displayName,
-        bio:       typedUser.bio,
-        role:      typedUser.role,
-        avatarSrc: typedUser.avatarUrl,
+        name:      profile.display_name,
+        bio:       profile.bio,
+        email:     user.email ?? '',
+        avatarSrc: profile.avatar_url,
+        role:      profile.role as 'free' | 'pro',
     }
 
-    const initialLinks = typedUser.links
-        .sort((a, b) => a.order - b.order)
-        .map(link => ({
-            id:    link._id.toString(),
-            title: link.title,
-            url:   link.url,
-        }))
+    const initialLinks = profile.links.map((link) => ({
+        id:    link.id,
+        title: link.title,
+        url:   link.url,
+    }))
 
-    async function handlePublish({
-                                     name,
-                                     bio,
-                                     links,
-                                 }: {
-        name:  string
-        bio:   string
-        links: { id: string; title: string; url: string }[]
-    }) {
-        'use server'
-
-        const { userId } = await auth()
-        if (!userId) return
-
-        const linksWithOrder = links.map((link, index) => ({
-            title: link.title,
-            url:   link.url,
-            order: index,
-        }))
-
-        await connectDB()
-        await User.findOneAndUpdate(
-            { clerkUserId: userId },
-            { $set: { displayName: name, bio, links: linksWithOrder } },
-            { new: true }
-        )
-
-        revalidatePath('/dashboard')
-        revalidatePath(`/${typedUser.username}`)
-    }
-
-    const headersList = await headers()
-    const userAgent   = headersList.get('user-agent') ?? ''
-    const isMobile    = /mobile|android|iphone|ipad/i.test(userAgent)
-
+    // onPublish is intentionally NOT passed here — DashboardClient
+    // defines it itself as a fetch() call to PUT /api/profile.
     return (
         <DashboardClient
             initialProfile={initialProfile}
             initialLinks={initialLinks}
-            username={typedUser.username}
-            isMobile={isMobile}
-            onPublish={handlePublish}
+            username={profile.username}
         />
     )
 }

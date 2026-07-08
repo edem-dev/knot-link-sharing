@@ -10,7 +10,7 @@ export interface FeaturesSectionProps {
 const FEATURES = [
     {
         Icon:        AtSign,
-        title:       'Custom [get-username]',
+        title:       'Custom [getusername]',
         description: 'Claim your unique URL in seconds. knottted.vercel.app/yourname is waiting for you.',
     },
     {
@@ -20,7 +20,7 @@ const FEATURES = [
     },
     {
         Icon:        Palette,
-        title:       'Beautiful public page',
+        title:       'Beautiful public route',
         description: 'A minimalist design that puts your content first. Customise colours and fonts.',
     },
 ] as const;
