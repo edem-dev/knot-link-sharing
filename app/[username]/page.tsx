@@ -4,6 +4,8 @@ import type {Metadata} from "next";
 import {createClient} from "@/lib/supabase/server";
 import PublicProfilePage from "@/components/sectional/UserSectionals/PublicProfilePage";
 
+
+
 //----- Cached data fetcher for the profile page -----//
 const getProfile = cache(async (username: string) => {
     const supabase = await createClient();
@@ -45,6 +47,7 @@ export async function generateMetadata({params}: Props): Promise<Metadata> {
 
 //------- Page Components ----------------------------------//
 export default async function PublicProfile({params}: Props) {
+
     const { username: rawUsername } = await params
     const username = rawUsername.toLowerCase()
 
@@ -68,13 +71,13 @@ export default async function PublicProfile({params}: Props) {
         }))
 
     return(
-        <PublicProfilePage
-            name={profile.display_name || profile.username}
-            username={`@${username}`}
-            bio={profile.bio || undefined}
-            avatarSrc={profile.avatar_url || undefined}
-            links={activeLinks}
-            showBranding={profile.role === 'free'}
-        />
+            <PublicProfilePage
+                name={profile.display_name || profile.username}
+                username={`@${username}`}
+                bio={profile.bio || undefined}
+                avatarSrc={profile.avatar_url || undefined}
+                links={activeLinks}
+                showBranding={profile.role === 'free'}
+            />
     )
 }

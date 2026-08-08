@@ -11,7 +11,9 @@ import FeaturesSection from "@/components/sectional/LandingSections/FeaturesSect
 import CTABannerSection from "@/components/sectional/LandingSections/CTABannerSection";
 import LandingFooter from "@/components/sectional/LandingSections/LandingFooter";
 
+    await new Promise(resolve => setTimeout(resolve, 3000))
 const page = () => {
+
 
     const [open, setOpen] = useState(false)
     const router = useRouter()

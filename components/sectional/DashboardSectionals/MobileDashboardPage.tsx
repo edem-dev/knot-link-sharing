@@ -124,20 +124,29 @@ const MobileDashboardPage: React.FC<DashboardPageProps> = (
 
     //==================== useEffect==============================//
 
-    // 1. Add a `isDirty` derived value â€” true when local state differs from initial data.
-//    Add this AFTER your existing state declarations inside MobileDashboardPage:
+    // Baseline the "unsaved changes" comparison runs against. Seeded from
+    // props on first render, then advanced locally once a publish attempt
+    // finishes (see the effect below). We deliberately don't compare
+    // directly against initialProfile/initialLinks on every render — those
+    // only change if the parent re-fetches and re-passes new props after a
+    // save, which this component can't rely on or control.
+    const [savedSnapshot, setSavedSnapshot] = useState({
+        name: initialProfile.name,
+        bio: initialProfile.bio,
+        links: initialLinks,
+    })
 
     const isDirty = useMemo(() => {
-        // Check if name or bio has changed from the initial values passed in
+        // Check if name or bio has changed from the last saved snapshot
         const profileChanged =
-            name !== initialProfile.name ||
-            bio  !== initialProfile.bio
+            name !== savedSnapshot.name ||
+            bio  !== savedSnapshot.bio
 
-        // Check if links have changed â€” compare length first (fast), then content
+        // Check if links have changed - compare length first (fast), then content
         const linksChanged =
-            links.length !== initialLinks.length ||
+            links.length !== savedSnapshot.links.length ||
             links.some((link, i) => {
-                const original = initialLinks[i]
+                const original = savedSnapshot.links[i]
                 return (
                     !original ||
                     link.title !== original.title ||
@@ -146,11 +155,34 @@ const MobileDashboardPage: React.FC<DashboardPageProps> = (
             })
 
         return profileChanged || linksChanged
-    }, [name, bio, links, initialProfile, initialLinks])
-// useMemo re-computes only when these values change.
-// This is important on mobile â€” we don't want expensive comparisons
-// running on every render.
+    }, [name, bio, links, savedSnapshot])
+    // useMemo re-computes only when these values change.
+    // This is important on mobile - we don't want expensive comparisons
+    // running on every render.
 
+    // Captures exactly what was submitted the moment "Publish" was clicked,
+    // so if the user keeps typing while the request is in flight, those
+    // in-flight edits don't get silently marked "saved" when it resolves.
+    const pendingSnapshotRef = useRef<typeof savedSnapshot | null>(null)
+
+    // Tracks the previous publishLoading value so we can detect the
+    // true -> false transition ("a publish attempt just finished") instead
+    // of reacting on every render where publishLoading happens to be false.
+    const wasPublishingRef = useRef(false)
+
+    useEffect(() => {
+        const isLoadingNow = !!publishLoading
+        if (wasPublishingRef.current && !isLoadingNow && pendingSnapshotRef.current) {
+            setSavedSnapshot(pendingSnapshotRef.current)
+            pendingSnapshotRef.current = null
+        }
+        wasPublishingRef.current = isLoadingNow
+    }, [publishLoading])
+
+    const handlePublishClick = useCallback(() => {
+        pendingSnapshotRef.current = { name, bio, links }
+        onPublish?.({ name, bio, links })
+    }, [name, bio, links, onPublish])
 
 
 
@@ -282,9 +314,9 @@ const MobileDashboardPage: React.FC<DashboardPageProps> = (
                                 variant="primary"
                                 size="sm"
                                 loading={publishLoading}
-                                onClick={() => onPublish?.({ name, bio, links })}
+                                onClick={handlePublishClick}
                                 type="button"
-                                className="flex-shrink-0"
+                                className="shrink-0"
                             >
                                 Publish
                             </Button>

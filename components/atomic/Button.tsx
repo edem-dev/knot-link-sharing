@@ -12,6 +12,7 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
     fullWidth?:boolean;
     leftIcon?:React.ReactNode;
     rightIcon?:React.ReactNode;
+    googleLoading?:boolean;
 }
 const Button:React.FC<ButtonProps> = (
     {
@@ -24,6 +25,7 @@ const Button:React.FC<ButtonProps> = (
         rightIcon,
         disabled,
         className="",
+        googleLoading,
         ...theRest
     }
 ) => {
@@ -58,6 +60,7 @@ const Button:React.FC<ButtonProps> = (
             aria-busy={loading}
             {...theRest}
         >
+
             {
                 loading
                 ? (

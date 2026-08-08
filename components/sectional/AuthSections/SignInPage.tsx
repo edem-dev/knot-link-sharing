@@ -27,6 +27,7 @@ export interface SignInPageProps {
     onSubmit?: (data:{email:string; password:string}) => void;
     onGoogleSignIn?: () => void;
     loading?: boolean;
+    googleLoading?: boolean;
     errorMessage?: string;
     className?: string;
 }
@@ -37,6 +38,7 @@ export interface SignInPageProps {
     loading = false,
     errorMessage,
     className = "",
+     googleLoading = false,
  }) => {
 
      // Form State-----------------------------------------------------
@@ -106,6 +108,7 @@ export interface SignInPageProps {
                         onClick={onGoogleSignIn}
                         type={"button"}
                         className={"my-4"}
+                        loading={loading}
                      >
                          Sign in with Google
                      </Button>
