@@ -13,6 +13,7 @@
     "@supabase/ssr": "^0.10.3",
     "@supabase/supabase-js": "^2.106.2",
     "bcryptjs": "^3.0.3",
+    "boneyard-js": "^1.9.0",
     "cloudinary": "^2.9.0",
     "clsx": "^2.1.1",
     "lucide-react": "^0.562.0",

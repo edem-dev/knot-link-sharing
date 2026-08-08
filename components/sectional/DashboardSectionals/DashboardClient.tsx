@@ -5,8 +5,9 @@ import { uploadAvatar } from '@/lib/uploadAvatar'
 import DashboardPage from '@/components/sectional/DashboardSectionals/DashboardPage'
 import MobileDashboardPage from '@/components/sectional/DashboardSectionals/MobileDashboardPage'
 import type { LinkRowData } from '@/types'
-import {useRouter} from "next/navigation";
-
+import {useRouter} from "next/navigation"
+import {useToast} from "@/hooks/useToast";
+import Toast from "@/components/atomic/Toast";
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 interface InitialProfile {
@@ -62,6 +63,7 @@ export default function DashboardClient(
     const [avatarSrc, setAvatarSrc] = useState(initialProfile.avatarSrc)
     const [uploading, setUploading] = useState(false)
     const [avatarError, setAvatarError] = useState('')
+    const {toast, show:showToast, dismiss:dismissToast} = useToast()
     const router = useRouter();
     const fileInputRef              = useRef<HTMLInputElement>(null)
 
@@ -119,21 +121,22 @@ export default function DashboardClient(
 
             if (res.ok) {
                 setPublishState('success')
+                showToast('Changes published successfully', 'success')  // ← NEW
             } else {
                 const body = await res.json().catch(() => ({}))
-                console.error('Publish failed:', body.error ?? 'unknown error')
                 setPublishState('error')
+                showToast(body.error ?? 'Could not save changes. Try again.', 'error')  // ← NEW
             }
-        } catch (err) {
-            console.error('Publish network error:', err)
+        } catch {
             setPublishState('error')
+            showToast('Network error — check your connection.', 'error')  // ← NEW
         }
 
-        // Reset regardless of outcome so the button is always available again
         setTimeout(() => setPublishState('idle'), 3_000)
     }
 
     const Component = isMobile ? MobileDashboardPage : DashboardPage
+
 
     return (
         <>
@@ -161,15 +164,26 @@ export default function DashboardClient(
                 </div>
             )}
 
-            <Component
-                initialProfile={{ ...initialProfile, avatarSrc }}
-                initialLinks={initialLinks}
-                username={username}
-                onPublish={handlePublish}
-                publishLoading={publishState === 'loading'}
-                onAvatarEdit={handleAvatarEdit}
-                avatarUploading={uploading}
-            />
+            {
+                toast && (
+                    <Toast
+                        key={toast.id}
+                        message={toast.message}
+                        variant={toast.variant}
+                        onDismiss={dismissToast}
+                    />
+                )}
+
+                <Component
+                    initialProfile={{ ...initialProfile, avatarSrc }}
+                    initialLinks={initialLinks}
+                    username={username}
+                    onPublish={handlePublish}
+                    publishLoading={publishState === 'loading'}
+                    onAvatarEdit={handleAvatarEdit}
+                    avatarUploading={uploading}
+                />
+
         </>
     )
 }

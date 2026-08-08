@@ -4,6 +4,10 @@ import DashboardClient  from '@/components/sectional/DashboardSectionals/Dashboa
 
 // SERVER COMPONENT — queries Supabase directly before any HTML is sent.
 // Cannot define event handlers or use hooks — DashboardClient owns those.
+
+
+
+
 export default async function DashboardPage() {
     const supabase = await createClient()
 
