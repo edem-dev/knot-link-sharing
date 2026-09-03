@@ -7,6 +7,7 @@ export interface LinkRowData {
     id:string
     title:string
     url:string
+    isActive:boolean
 }
 
 export interface ProfilePayload {

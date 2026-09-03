@@ -1,28 +1,75 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { clsx } from 'clsx';
-import { BarChart2, Globe, MousePointerClick, TrendingUp, Users } from 'lucide-react';
+import { BarChart2, Globe, MousePointerClick } from 'lucide-react';
+import {
+    ResponsiveContainer,
+    BarChart,
+    Bar,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    Tooltip,
+} from 'recharts';
 
 //===========================Analytics Panel ==========================================//
 // Shared between Desktop `DashboardPage` and `MobileDashboardPage`.
-// This panel is shown when 'activePath === "/analytics"'. Contains hardcoded data.
-// TODO: Replace hardcoded data with actual analytics data from API.
-const AnalyticsPanel: React.FC = () => {
-    //===================Overview stats data ==========================//
-    const overviewStats = [
-        { label: 'Total Views',  value: '12,847', delta: '+12% this week', Icon: Globe             },
-        { label: 'Link Clicks',  value: '3,291',  delta: '+8% this week',  Icon: MousePointerClick },
-        { label: 'Followers',    value: '1,024',  delta: '+24 this week',  Icon: Users             },
-        { label: 'Top Link CTR', value: '34.2%',  delta: 'Portfolio',      Icon: TrendingUp        },
-    ];
+// Shown when activePath === '/analytics'. Fetches real data from
+// GET /api/analytics on mount — no more hardcoded numbers.
+interface LinkStat {
+    id: string
+    title: string
+    clicks: number
+}
 
-    //================== Top Links ====================================//
-    const topLinks = [
-        { title: 'Portfolio Website', clicks: 892, pct: 72 },
-        { title: 'Latest Case Study', clicks: 421, pct: 34 },
-        { title: 'YouTube Channel',   clicks: 210, pct: 17 },
-    ];
+interface AnalyticsData {
+    totalViews: number
+    totalClicks: number
+    links: LinkStat[]
+}
+
+const AnalyticsPanel: React.FC = () => {
+    const [data, setData]       = useState<AnalyticsData | null>(null)
+    const [loading, setLoading] = useState(true)
+    const [error, setError]     = useState('')
+
+    useEffect(() => {
+        let cancelled = false
+
+        const load = async () => {
+            setLoading(true)
+            setError('')
+
+            try {
+                const res  = await fetch('/api/analytics')
+                const body = await res.json()
+
+                if (!res.ok) throw new Error(body.error ?? 'Could not load analytics')
+                if (!cancelled) setData(body)
+            } catch (err) {
+                if (!cancelled) {
+                    setError(err instanceof Error ? err.message : 'Could not load analytics')
+                }
+            } finally {
+                if (!cancelled) setLoading(false)
+            }
+        }
+
+        load()
+        // Guards against setting state after unmount — e.g. the user
+        // navigates off the /analytics tab before the fetch resolves.
+        return () => { cancelled = true }
+    }, [])
+
+    const overviewStats = data
+        ? [
+            { label: 'Total Views', value: data.totalViews.toLocaleString(),  Icon: Globe             },
+            { label: 'Link Clicks', value: data.totalClicks.toLocaleString(), Icon: MousePointerClick },
+        ]
+        : []
+
+
 
     return (
         <div className="flex flex-col gap-6">
@@ -46,40 +93,57 @@ const AnalyticsPanel: React.FC = () => {
                     Overview
                 </h2>
 
-                {/*==============================Analytics Data ==========================*/}
-                <div className="grid grid-cols-2 gap-4">
-                    {overviewStats.map(({ label, value, delta, Icon }) => (
-                        <div
-                            key={label}
-                            className={clsx(
-                                'flex flex-col gap-2',
-                                'bg-slate-50 dark:bg-slate-800',
-                                'rounded-2xl p-4'
-                            )}
-                        >
-                            <div className="flex items-center gap-2">
-                                <Icon className="w-5 h-5 text-brand-500 dark:text-brand-400" aria-hidden="true" />
-                                <span
-                                    className={clsx(
-                                        'font-display font-semibold text-xs',
-                                        'uppercase tracking-widest text-slate-500 dark:text-slate-400'
-                                    )}
-                                >
-                                    {label}
-                                </span>
-                            </div>
-                            <p
+                {loading && (
+                    <div className="grid grid-cols-2 gap-4">
+                        {[0, 1].map((i) => (
+                            <div
+                                key={i}
+                                className="h-24 bg-slate-50 dark:bg-slate-800 rounded-2xl animate-pulse"
+                            />
+                        ))}
+                    </div>
+                )}
+
+                {!loading && error && (
+                    <p className="text-sm font-body text-red-500" role="alert">
+                        {error}
+                    </p>
+                )}
+
+                {!loading && !error && data && (
+                    <div className="grid grid-cols-2 gap-4">
+                        {overviewStats.map(({ label, value, Icon }) => (
+                            <div
+                                key={label}
                                 className={clsx(
-                                    'font-display font-extrabold text-2xl',
-                                    'text-slate-900 dark:text-white'
+                                    'flex flex-col gap-2',
+                                    'bg-slate-50 dark:bg-slate-800',
+                                    'rounded-2xl p-4'
                                 )}
                             >
-                                {value}
-                            </p>
-                            <p className="text-xs font-body text-slate-400 dark:text-slate-500">{delta}</p>
-                        </div>
-                    ))}
-                </div>
+                                <div className="flex items-center gap-2">
+                                    <Icon className="w-5 h-5 text-brand-500 dark:text-brand-400" aria-hidden="true" />
+                                    <span
+                                        className={clsx(
+                                            'font-display font-semibold text-xs',
+                                            'uppercase tracking-widest text-slate-500 dark:text-slate-400'
+                                        )}
+                                    >
+                                        {label}
+                                    </span>
+                                </div>
+                                <p
+                                    className={clsx(
+                                        'font-display font-extrabold text-2xl',
+                                        'text-slate-900 dark:text-white'
+                                    )}
+                                >
+                                    {value}
+                                </p>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </section>
 
             {/*============================= Top Links Stats Section============================*/}
@@ -91,7 +155,6 @@ const AnalyticsPanel: React.FC = () => {
                     'dark:border-slate-800 p-6'
                 )}
             >
-                {/*=====================Top Links Heading ========================*/}
                 <h2
                     id="analytics-top-links-heading"
                     className={clsx(
@@ -101,41 +164,43 @@ const AnalyticsPanel: React.FC = () => {
                 >
                     Top Links
                 </h2>
-                {/*======================Top Links Content=====================*/}
-                <div className="flex flex-col gap-4">
-                    {topLinks.map(({ title, clicks, pct }) => (
-                        <div key={title}>
-                            <div className="flex items-center justify-between mb-2">
-                                <span
-                                    className={clsx(
-                                        'text-sm font-body font-medium',
-                                        'text-slate-700 dark:text-slate-200',
-                                        'truncate'
-                                    )}
-                                >
-                                    {title}
-                                </span>
-                                <span className="text-sm font-body text-slate-500 flex-shrink-0 ml-3">
-                                    {clicks} clicks
-                                </span>
-                            </div>
-                            {/*=====================Progress Bar =======================*/}
-                            <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
-                                <div
-                                    className="h-full bg-brand-600 rounded-full transition-all duration-500"
-                                    style={{ width: `${pct}%` }}
-                                    // inline style — Tailwind can't generate arbitrary % widths
-                                    // from dynamic values. Inline style is correct here.
-                                    role="progressbar"
-                                    aria-valuenow={pct}
-                                    aria-valuemin={0}
-                                    aria-valuemax={100}
-                                    aria-label={`${title}: ${pct}% of clicks`}
+
+                {loading && (
+                    <div className="h-48 bg-slate-50 dark:bg-slate-800 rounded-2xl animate-pulse" />
+                )}
+
+                {!loading && !error && data && data.links.length === 0 && (
+                    <p className="text-sm font-body text-slate-400 dark:text-slate-500 text-center py-8">
+                        No links yet — add some links to start tracking clicks.
+                    </p>
+                )}
+
+                {!loading && !error && data && data.links.length > 0 && (
+                    <div style={{ width: '100%', height: Math.max(160, data.links.length * 48) }}>
+                        <ResponsiveContainer>
+                            <BarChart
+                                data={data.links}
+                                layout="vertical"
+                                margin={{ top: 0, right: 24, bottom: 0, left: 0 }}
+                            >
+                                <CartesianGrid strokeDasharray="3 3" horizontal={false} className="stroke-slate-100 dark:stroke-slate-800" />
+                                <XAxis type="number" allowDecimals={false} tick={{ fontSize: 12 }} />
+                                <YAxis
+                                    type="category"
+                                    dataKey="id"                              // unique category
+                                    width={140}
+                                    tick={{ fontSize: 12 }}
+                                    tickFormatter={(id: string) => {
+                                        const title = data.links.find(l => l.id === id)?.title ?? ''
+                                        return title.length > 18 ? `${title.slice(0, 18)}…` : title
+                                    }}
                                 />
-                            </div>
-                        </div>
-                    ))}
-                </div>
+                                <Tooltip formatter={(value) => `${value} clicks`} />
+                                <Bar dataKey="clicks" fill="#7C3AED" radius={[0, 6, 6, 0]} />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                )}
             </section>
         </div>
     );

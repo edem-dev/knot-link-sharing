@@ -29,11 +29,25 @@ import Input from "@/components/atomic/Input";
 import Textarea from "@/components/atomic/Textarea";
 
 //===================== Shared Types =========================//
-import { LinkRowData } from "@/components/molecular/EditableLinkRow";
+import type { LinkRowData } from "@/types";
 import { clsx } from 'clsx';
 
-// =======================Clerk Sign out====================//
-
+// =======================Drag and drop imports====================//
+import {
+    DndContext,
+    closestCenter,
+    KeyboardSensor,
+    PointerSensor,
+    useSensor,
+    useSensors,
+    type DragEndEvent,
+} from '@dnd-kit/core';
+import {
+    SortableContext,
+    verticalListSortingStrategy,
+    sortableKeyboardCoordinates,
+    arrayMove,
+} from '@dnd-kit/sortable';
 
 // ================ Nav Items =============================//
 const NAV_ITEMS = [
@@ -70,7 +84,7 @@ const MobileDashboardPage: React.FC<DashboardPageProps> = (
     {
         initialProfile = { name: 'Michael Kumah', bio: '', role: 'Knotted Creator', avatarSrc: '' },
         initialLinks = [],
-        username = 'michaelkumah',
+        username: initialUsername = 'michaelkumah',
         onPublish,
         publishLoading,
         className = '',
@@ -83,8 +97,8 @@ const MobileDashboardPage: React.FC<DashboardPageProps> = (
 
 
 
-    //========================Handle Sign out===========================//
-
+    //========================Username state===========================//
+    const [username, setUsername] = useState(initialUsername)
 
     const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -101,7 +115,10 @@ const MobileDashboardPage: React.FC<DashboardPageProps> = (
         setAvatarMenuOpen(false);
     }, []);
 
-    // =============================Supabase sign put handler=============================
+    // =============================Sve username handler handler=============================
+    const handleUsernameSaved = useCallback((newUsername: string) => {
+        setUsername(newUsername)
+    }, [])
 
     //================Active Panel State==========================//
     const [activePath, setActivePath] = useState<NavHref>('/dashboard');
@@ -125,7 +142,7 @@ const MobileDashboardPage: React.FC<DashboardPageProps> = (
     //==================== useEffect==============================//
 
     // Baseline the "unsaved changes" comparison runs against. Seeded from
-    // props on first render, then advanced locally once a publish attempt
+    // props on the first render, then advanced locally once a publish attempt
     // finishes (see the effect below). We deliberately don't compare
     // directly against initialProfile/initialLinks on every render — those
     // only change if the parent re-fetches and re-passes new props after a
@@ -149,8 +166,10 @@ const MobileDashboardPage: React.FC<DashboardPageProps> = (
                 const original = savedSnapshot.links[i]
                 return (
                     !original ||
+                    link.id !== original.id ||
                     link.title !== original.title ||
-                    link.url   !== original.url
+                    link.url   !== original.url ||
+                    link.isActive !== original.isActive
                 )
             })
 
@@ -209,8 +228,32 @@ const MobileDashboardPage: React.FC<DashboardPageProps> = (
         setLinks((prev) => prev.filter((l) => l.id !== id));
     }, []);
 
+    const sensors = useSensors(
+        useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+        useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+    );
+
+    const handleDragEnd = useCallback((event: DragEndEvent) => {
+        const { active, over } = event;
+        if (!over || active.id === over.id) return;
+        setLinks((prev) => {
+            const oldIndex = prev.findIndex((l) => l.id === active.id);
+            const newIndex = prev.findIndex((l) => l.id === over.id);
+            if (oldIndex === -1 || newIndex === -1) return prev;
+            return arrayMove(prev, oldIndex, newIndex);
+        });
+    }, []);
+
+
+    const handleToggleActive = useCallback((id: string) => {
+        setLinks((prev) =>
+            prev.map((l) => (l.id === id ? { ...l, isActive: !l.isActive } : l))
+        );
+    }, [])
+
     const handleAddLink = useCallback((newLink: Omit<LinkRowData, 'id'>) => {
-        setLinks((prev) => [...prev, { ...newLink, id: crypto.randomUUID() }]);
+        setLinks((prev) => [...prev, { ...newLink, id: crypto.randomUUID(), isActive:newLink.isActive ?? true }
+        ]);
         setAddOpen(false);
     }, []);
 
@@ -417,18 +460,28 @@ const MobileDashboardPage: React.FC<DashboardPageProps> = (
                             </div>
 
                             <div className="flex flex-col gap-2">
-                                {links.map((link) => (
-                                    <EditableLinkRow
-                                        key={link.id}
-                                        link={link}
-                                        onChange={handleLinkChange}
-                                        onDelete={handleLinkDelete}
-                                    />
-                                ))}
+                                <DndContext
+                                    id={"mobile-dashboard-links"}
+                                    sensors={sensors}
+                                    collisionDetection={closestCenter}
+                                    onDragEnd={handleDragEnd}
+                                >
+                                    <SortableContext items={links.map((l) => l.id)} strategy={verticalListSortingStrategy}>
+                                        {links.map((link) => (
+                                            <EditableLinkRow
+                                                key={link.id}
+                                                link={link}
+                                                onChange={handleLinkChange}
+                                                onDelete={handleLinkDelete}
+                                                onToggleActive={handleToggleActive}
+                                            />
+                                        ))}
+                                    </SortableContext>
+                                </DndContext>
 
                                 {links.length === 0 && (
                                     <p className="text-sm font-body text-slate-400 dark:text-slate-500 text-center py-4">
-                                        No links yet â€” tap the button below to add your first one!
+                                        No links yet — tap the button below to add your first one!
                                     </p>
                                 )}
                             </div>
@@ -457,7 +510,17 @@ const MobileDashboardPage: React.FC<DashboardPageProps> = (
                 {activePath === '/analytics' && <AnalyticsPanel />}
 
                 {/*â”€â”€ /settings panel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€*/}
-                {activePath === '/settings' && <SettingsPanel />}
+                {activePath === '/settings' && (
+                    <SettingsPanel
+                        name={name}
+                        setName={setName}
+                        bio={bio}
+                        setBio={setBio}
+                        username={username}
+                        onUsernameSaved={handleUsernameSaved}
+                        userEmail={userEmail}
+                    />
+                )}
 
                 {/*â”€â”€ /profile panel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€*/}
                 {activePath === '/profile' && (

@@ -20,7 +20,7 @@ export default async function DashboardPage() {
         error: authError,
     } = await supabase.auth.getUser()
 
-    if (authError || !user) redirect('/sign-in')
+    if (authError || !user) redirect('/signin')
 
     // ── Fetch profile + links in one round trip ───────────────────────────────
     const { data: profile } = await supabase
@@ -48,9 +48,10 @@ export default async function DashboardPage() {
     }
 
     const initialLinks = profile.links.map((link) => ({
-        id:    link.id,
-        title: link.title,
-        url:   link.url,
+        id:       link.id,
+        title:    link.title,
+        url:      link.url,
+        isActive: true,
     }))
 
     // onPublish is intentionally NOT passed here — DashboardClient

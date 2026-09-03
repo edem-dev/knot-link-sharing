@@ -24,6 +24,7 @@ export interface SignUpPageProps {
     onSubmit?:(data:{name:string; email:string; password:string}) => void;
     onGoogleSignUp?:() => void;
     loading?:boolean;
+    googleLoading?:boolean;
     errorMessage?:string;
     className?:string;
 }
@@ -32,6 +33,7 @@ const SignUpPage:React.FC<SignUpPageProps> = ({
     onSubmit,
     onGoogleSignUp,
     loading = false,
+    googleLoading = false,
     errorMessage,
     className,
 }) => {
@@ -189,6 +191,7 @@ const SignUpPage:React.FC<SignUpPageProps> = ({
                         onClick={onGoogleSignUp}
                         type={"button"}
                         className={"my-4"}
+                        loading={googleLoading}
                    >
                        Sign up with Google
                    </Button>

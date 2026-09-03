@@ -12,7 +12,7 @@ import MobileDashboardPage from "@/components/sectional/DashboardSectionals/Mobi
 
 export default async function DashboardClient() {
     const { userId } = await auth()
-    if (!userId) redirect('/sign-in')
+    if (!userId) redirect('/signin')
 
     await connectDB()
     const user = await User.findOne({ clerkUserId: userId }).lean()

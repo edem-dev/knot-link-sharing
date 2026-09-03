@@ -43,7 +43,8 @@ export async function GET() {
         links: profile.links.map((link) =>({
             id:link.id,
             title: link.title,
-            url: link.url
+            url: link.url,
+            isActive: link.is_active,
         }))
     })
 }
@@ -72,7 +73,7 @@ export async function PUT(request: Request){
     let body:{
         name?:string
         bio?:string
-        links?: {id:string; title: string; url: string}[]
+        links?: {id:string; title: string; url: string; isActive?:boolean}[]
     }
 
     try {
@@ -133,6 +134,7 @@ export async function PUT(request: Request){
             title: link.title.trim(),
             url: link.url.trim(),
             sort_order: index,
+            is_active: link.isActive ?? true,
             // DELIBERATELY no `id` field — we let gen_random_uuid() generate
             // fresh IDs. The client-side `id` in the payload is a temporary
             // React key, not a database identity we want to preserve.

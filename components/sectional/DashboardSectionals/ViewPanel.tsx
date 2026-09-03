@@ -6,7 +6,7 @@ import { clsx } from 'clsx';
 import { Eye } from 'lucide-react';
 
 import Avatar from '@/components/atomic/Avatar';
-import { LinkRowData } from '@/components/molecular/EditableLinkRow';
+import type { LinkRowData } from '@/types';
 
 //===========================View Panel ==========================================//
 // Shared between Desktop `DashboardPage` and `MobileDashboardPage`.
@@ -14,11 +14,12 @@ import { LinkRowData } from '@/components/molecular/EditableLinkRow';
 export interface ViewPanelProps {
     username:   string;
     links:      LinkRowData[];
-    name:       string;
+    name:       string
+    bio?: string;
     avatarSrc?: string;
 }
 
-const ViewPanel: React.FC<ViewPanelProps> = ({ username, links, name, avatarSrc }) => {
+const ViewPanel: React.FC<ViewPanelProps> = ({ username, links, name,bio, avatarSrc }) => {
     return (
         <div
             className={clsx(
@@ -49,7 +50,7 @@ const ViewPanel: React.FC<ViewPanelProps> = ({ username, links, name, avatarSrc 
                     className={clsx(
                         'inline-flex items-center gap-2',
                         'px-3 py-1.5',
-                        'text-sm font-medium',
+                        'text-xs font-medium',
                         'text-brand-600 bg-brand-50 dark:bg-brand-900/50',
                         'rounded-full'
                     )}
@@ -75,6 +76,8 @@ const ViewPanel: React.FC<ViewPanelProps> = ({ username, links, name, avatarSrc 
                 <h3 className="font-display font-extrabold text-xl text-slate-900 dark:text-white mb-1">
                     {name}
                 </h3>
+
+                <p className={"font-body my-4 font-normal text-sm text-slate-600 dark:text-white mb-1"}>{bio}</p>
 
                 {/* Preview link list */}
                 <div className="w-full max-w-xs flex flex-col gap-2 px-4">

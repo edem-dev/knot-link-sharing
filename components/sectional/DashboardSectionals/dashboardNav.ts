@@ -1,5 +1,5 @@
 import { BarChart2, Eye, LayoutDashboard, Settings } from 'lucide-react'
-import type { LinkRowData } from '@/components/molecular/EditableLinkRow'
+import type { LinkRowData } from '@/types'
 
 export const NAV_ITEMS = [
     { href: '/dashboard', label: 'Dashboard',    Icon: LayoutDashboard },

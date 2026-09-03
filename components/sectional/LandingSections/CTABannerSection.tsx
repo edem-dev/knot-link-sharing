@@ -13,7 +13,7 @@ const CTABannerSection:React.FC<CTABannerSectionProps> = ({
     headline = "Ready to knot you links?",
     subtext = "Join thousands of creators today. No credit card required.",
     ctaLabel = "Get Started Now",
-    ctaHref = "/sign-up",
+    ctaHref = "/signup",
     className = '',
 }) => {
     return (

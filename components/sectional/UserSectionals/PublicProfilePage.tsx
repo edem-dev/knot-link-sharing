@@ -120,6 +120,7 @@ const PublicProfilePage:React.FC<PublicProfilePageProps> = ({
                 {links.map((link) => (
                     <PublicLinkItem
                         key={link.id}
+                        linkId={link.id}
                         title={link.title}
                         href={link.href}
                         icon={link.icon}

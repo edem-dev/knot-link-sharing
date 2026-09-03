@@ -21,7 +21,7 @@ const PublicBranding = () => {
 
                 <div className="flex gap-2">
 
-                    <Link href="/sign-up">
+                    <Link href="/signup">
                         <Button
                             variant="primary"
                             size="sm"
@@ -31,7 +31,7 @@ const PublicBranding = () => {
                         </Button>
                     </Link>
 
-                    <Link href="/sign-in">
+                    <Link href="/signin">
                         <Button
                             variant="outline"
                             size="sm"

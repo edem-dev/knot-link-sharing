@@ -24,5 +24,5 @@ export async function GET(request: Request) {
     }
 
     // Code missing or exchange failed — send back to sign-in with an error flag
-    return NextResponse.redirect(`${origin}/sign-in?error=auth-failed`)
+    return NextResponse.redirect(`${origin}/signin?error=auth-failed`)
 }

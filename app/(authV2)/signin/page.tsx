@@ -7,6 +7,7 @@ import SignInPage from '@/components/sectional/AuthSections/SignInPage' // adjus
 
 export default function SignInRoute() {
     const [loading, setLoading] = useState(false)
+    const [googleLoading, setGoogleLoading] = useState(false)
     const [errorMessage, setErrorMessage] = useState<string | undefined>()
     const router = useRouter()
 
@@ -33,11 +34,22 @@ export default function SignInRoute() {
     }
 
     async function handleGoogleSignIn() {
+        setGoogleLoading(true)
+        setErrorMessage(undefined)
+
         const supabase = createClient()
-        await supabase.auth.signInWithOAuth({
+        const { error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
-            options: { redirectTo: `${window.location.origin}/auth/callback` },
+            options: {
+                redirectTo: `${window.location.origin}/auth/callback`,
+                queryParams: { prompt: 'select_account' },
+            },
         })
+
+        if (error) {
+            setErrorMessage(error.message)
+            setGoogleLoading(false)
+        }
     }
 
     return (
@@ -45,6 +57,7 @@ export default function SignInRoute() {
             onSubmit={handleSubmit}
             onGoogleSignIn={handleGoogleSignIn}
             loading={loading}
+            googleLoading={googleLoading}
             errorMessage={errorMessage}
         />
     )
