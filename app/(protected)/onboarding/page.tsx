@@ -55,7 +55,7 @@ export default function UsernamePage() {
                 </div>
             )}
 
-            <UsernameOnboardingPage onClaim={handleClaim} />
+            <UsernameOnboardingPage onClaim={handleClaim} loading={loading}/>
         </div>
     )
 }

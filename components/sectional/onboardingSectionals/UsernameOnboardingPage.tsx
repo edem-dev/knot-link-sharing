@@ -27,6 +27,7 @@ interface UsernameOnboardingPageProps {
     totalSteps?:number;
     onClaim?:(username:string) => void;
     className?:string;
+    loading?:boolean;
 }
 
 const UsernameOnboardingPage:React.FC<UsernameOnboardingPageProps> = ({
@@ -34,6 +35,7 @@ const UsernameOnboardingPage:React.FC<UsernameOnboardingPageProps> = ({
     totalSteps = 1,
     onClaim,
     className = '',
+    loading = false,
 }) => {
 
     // Username state check------------------------------------>
@@ -175,6 +177,7 @@ const UsernameOnboardingPage:React.FC<UsernameOnboardingPageProps> = ({
                             value={username}
                             onChange={handleUsernameChange}
                             inputState={inputState}
+                            disabled={loading}
                             trailingIcon={
                                 availability === 'checking'
                                     ? (
@@ -206,11 +209,17 @@ const UsernameOnboardingPage:React.FC<UsernameOnboardingPageProps> = ({
                         size={"xl"}
                         fullWidth={true}
                         type={"submit"}
-                        disabled={availability !== 'available'}
-                        rightIcon={<ArrowRight className={"w-4 h-4"}/>}
+                        disabled={availability !== 'available' || loading}
+                        rightIcon={
+                            loading ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                                <ArrowRight className="w-4 h-4" />
+                            )
+                        }
                         className={"mt-4"}
                     >
-                        Claim username
+                        {loading ? 'Claiming username...' : 'Claim username'}
                     </Button>
                 </form>
 
