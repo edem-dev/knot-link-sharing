@@ -24,6 +24,8 @@ interface DashboardClientProps {
     username:       string
 }
 
+
+
 type PublishState = 'idle' | 'loading' | 'success' | 'error'
 
 // ── useIsMobile ───────────────────────────────────────────────────────────────
@@ -182,6 +184,7 @@ export default function DashboardClient(
                     publishLoading={publishState === 'loading'}
                     onAvatarEdit={handleAvatarEdit}
                     avatarUploading={uploading}
+                    userEmail={initialProfile.email}
                 />
 
         </>

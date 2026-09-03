@@ -108,7 +108,7 @@ export interface SignInPageProps {
                         onClick={onGoogleSignIn}
                         type={"button"}
                         className={"my-4"}
-                        loading={loading}
+                        loading={googleLoading}
                      >
                          Sign in with Google
                      </Button>

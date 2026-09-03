@@ -29,14 +29,14 @@ const AuthMode: React.FC<AuthModeProps> = ({
             {mode === "sign-in" &&(
                 <div className={"flex items-center gap-2"}>
                     <Button variant={"ghost"} size={"sm"}>Developers</Button>
-                    <Button onClick={() => router.push("/sign-up")} variant={"dark"} size={"sm"}>Sign-Up</Button>
+                    <Button onClick={() => router.push("/signup")} variant={"dark"} size={"sm"}>Sign-Up</Button>
                 </div>
             )}
             {/*Render sign-up mode buttons--------------------------------*/}
             {mode === "sign-up" &&(
                 <div className={"flex items-center gap-2"}>
                     <Button variant={"ghost"} size={"sm"}>Developers</Button>
-                    <Button onClick={() => router.push("/sign-in")} variant={"dark"} size={"sm"}>Sign-In</Button>
+                    <Button onClick={() => router.push("/signin")} variant={"dark"} size={"sm"}>Sign-In</Button>
                 </div>
             )}
             {/*Onboarding mode render--------------------------------------r*/}
@@ -45,7 +45,7 @@ const AuthMode: React.FC<AuthModeProps> = ({
                     <Button variant={"ghost"} size={"sm"}>
                         Step {step} of {totalSteps}
                     </Button>
-                    <Button onClick={() => router.push("/sign-up")} variant={"dark"} size={"sm"}>Sign-Up</Button>
+                    <Button onClick={() => router.push("/signup")} variant={"dark"} size={"sm"}>Sign-Up</Button>
                 </div>
             )}
 

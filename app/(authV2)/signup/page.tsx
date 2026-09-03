@@ -7,6 +7,7 @@ import React from 'react';
 
 export default function SignUpRoute() {
     const [loading, setLoading] = useState(false)
+    const [googleLoading, setGoogleLoading] = useState(false)
     const [errorMessage, setErrorMessage] = useState<string | undefined>()
     const router = useRouter()
 
@@ -34,16 +35,21 @@ export default function SignUpRoute() {
     }
 
     async function handleGoogleSignUp() {
+        setGoogleLoading(true)
+        setErrorMessage(undefined)
+
         const supabase = createClient()
         const {error:oauthError} =  await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
                 redirectTo: `${window.location.origin}/auth/callback`,
+                queryParams: { prompt: 'select_account' },
             },
         })
 
         if(oauthError){
             setErrorMessage(oauthError.message)
+            setGoogleLoading(false)
             return
         }
     }
@@ -54,6 +60,7 @@ export default function SignUpRoute() {
             onSubmit={handleSubmit}
             onGoogleSignUp={handleGoogleSignUp}
             loading={loading}
+            googleLoading={googleLoading}
             errorMessage={errorMessage}
         />
     );

@@ -7,12 +7,7 @@ import Modal from "@/components/atomic/Modal";
 import Input from "@/components/atomic/Input";
 import Button from "@/components/atomic/Button"
 
-// Link row data
-export interface LinkRowData{
-    id:string;
-    title:string;
-    url:string;
-}
+import type { LinkRowData } from '@/types';
 
 // Main conponent interface
 export interface AddLinkModalProps {
@@ -83,7 +78,8 @@ const AddLinkModal:React.FC<AddLinkModalProps> = (
 
         onAdd({
             title:title.trim(),
-            url:url.trim()
+            url:url.trim(),
+            isActive:true,
         });
     }
 

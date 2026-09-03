@@ -22,7 +22,7 @@ import Input from "@/components/atomic/Input";
 import Textarea from "@/components/atomic/Textarea";
 
 // Imported interfaces
-import {LinkRowData} from "@/components/molecular/EditableLinkRow";
+import type { LinkRowData } from "@/types";
 
 //Lucide Icons Import
 import {
@@ -36,14 +36,24 @@ import {
 } from "lucide-react";
 import PageURLBanner from "@/components/molecular/PageURLBanner";
 import {useRouter} from "next/navigation";
-import {router} from "next/client";
 
-//================== Supabase sign out handler===========================//
-
-
-
-
-
+//==========================Drag and drop==========================//
+import {
+    DndContext,
+    closestCenter,
+    KeyboardSensor,
+    PointerSensor,
+    useSensor,
+    useSensors,
+    type DragEndEvent,
+} from '@dnd-kit/core';
+import {
+    SortableContext,
+    verticalListSortingStrategy,
+    sortableKeyboardCoordinates,
+    arrayMove,
+} from '@dnd-kit/sortable';
+//==========================Drag and drop==========================//
 
 //Nav Items --------------------------------------------------------------//
 const NAV_ITEMS = [
@@ -113,11 +123,13 @@ interface EditorPanelProps{
     links: LinkRowData[];
     onLinkChange: (id:string, field:"title" | "url" , value:string)=> void;
     onLinkDelete: (id:string)=> void;
+    onaLinkToggleActive: (id:string)=> void;
+    onLinksReorder: (activeId: string, overId: string) => void
     onAddOpen:()=> void;
     avatarName:string;
     avatarSrc?:string;
-    onAvatarEdit?:    () => void       // â† add this
-    avatarUploading?: boolean
+    onAvatarEdit?:    () => void;
+    avatarUploading?: boolean;
 }
 
 //Editor panel component-----------------------------------------------------------//
@@ -129,12 +141,36 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
     links,
     onLinkChange,
     onLinkDelete,
+    onaLinkToggleActive,
+    onLinksReorder,
     onAddOpen,
     avatarName,
     avatarSrc,
     onAvatarEdit,
     avatarUploading
+
 }) => {
+
+    //================== What counts as starting a drag===================//
+    const sensors = useSensors(
+        useSensor(PointerSensor,{
+            activationConstraint: {distance: 8},
+        }),
+        useSensor(KeyboardSensor,{
+            coordinateGetter: sortableKeyboardCoordinates,
+        })
+    );
+    //================== What counts as starting a drag===================//
+
+    //================== Drag handler===================//
+    const handleDragEnd = (event: DragEndEvent) => {
+        const {active, over} = event;
+        if (!over || active.id === over.id) return;
+        onLinksReorder(String(active.id), String(over.id))
+    }
+    //================== Drag handler===================//
+
+
     return (
         <div className={"flex flex-col gap-6"}>
             {/*==Profile section=====================================================*/}
@@ -234,14 +270,27 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
 
                 <div className={"flex flex-col gap-3"}>
                 {/*================== Editable Link Row====================*/}
-                    {links.map((link) => (
-                      <EditableLinkRow
-                          key={link.id}
-                          link={link}
-                          onChange={onLinkChange}
-                          onDelete={onLinkDelete}
-                      />
-                    ))}
+                    <DndContext
+                        id={"dashboard-links"}
+                        sensors={sensors}
+                        collisionDetection={closestCenter}
+                        onDragEnd={handleDragEnd}
+                    >
+                        <SortableContext
+                            items={links.map((l) => l.id)}
+                            strategy={verticalListSortingStrategy}
+                        >
+                            {links.map((link) => (
+                                <EditableLinkRow
+                                    key={link.id}
+                                    link={link}
+                                    onChange={onLinkChange}
+                                    onDelete={onLinkDelete}
+                                    onToggleActive={onaLinkToggleActive}
+                                />
+                            ))}
+                        </SortableContext>
+                    </DndContext>
 
                 {/*=================== Empty State: ADD zone=================*/}
                     <button
@@ -288,16 +337,18 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
 
 
 
-const DashboardPage:React.FC<DashboardPageProps> = ({
-                                                        initialProfile = {name: 'Michael Kumah', bio: '', role: 'Knotted Creator', avatarSrc: ''},
-                                                        initialLinks = [],
-                                                        username = 'michaelkumah',
-                                                        onPublish,
-                                                        publishLoading = false,
-                                                        className = '',
-                                                        onAvatarEdit,        // â† add
-                                                        avatarUploading,     // â† add
-                                                    }) => {
+const DashboardPage:React.FC<DashboardPageProps> = (
+    {
+        initialProfile = {name: 'Michael Kumah', bio: '', role: 'Knotted Creator', avatarSrc: ''},
+        initialLinks = [],
+        username: initialUsername = 'michaelkumah',
+        onPublish,
+        publishLoading = false,
+        className = '',
+        onAvatarEdit,
+        avatarUploading,
+        userEmail,
+    }) => {
 
 
 
@@ -312,6 +363,9 @@ const DashboardPage:React.FC<DashboardPageProps> = ({
     //==================Links State ==================================//
     const [links, setLinks] = useState<LinkRowData[]>(initialLinks)
     const [addOpen, setAddOpen] = useState(false)
+
+    //==================Username State ==================================//
+    const [username, setUsername] = useState(initialUsername)
 
     //=================Url copy State ================================//
     const [urlCopied, setUrlCopied] = useState(false)
@@ -334,6 +388,24 @@ const DashboardPage:React.FC<DashboardPageProps> = ({
         []
     );
 
+    const handleLinkReorder = useCallback((activeId: string, overId: string) => {
+        setLinks((prev) => {
+            const oldIndex = prev.findIndex((l) => l.id === activeId);
+            const newIndex = prev.findIndex((l) => l.id === overId);
+            if (oldIndex === -1 || newIndex === -1) return prev;   // safety guard
+            return arrayMove(prev, oldIndex, newIndex);
+        });
+    }, []);
+
+    const handleLinkToggleActive = useCallback(
+        (id: string) => {
+            setLinks((prev) =>
+                prev.map((l) => (l.id === id ? { ...l, isActive: !l.isActive } : l))
+            )
+        },
+        []
+    );
+
     const handleAddLink = useCallback(
         (newLink: Omit<LinkRowData, 'id'>) => {
             // Omit<LinkRowData, 'id'> â†’ AddLinkModal passes { title, url } without id.
@@ -341,13 +413,17 @@ const DashboardPage:React.FC<DashboardPageProps> = ({
             // id generation lives HERE â€” the single place that owns the links state.
             setLinks((prev) => [
                 ...prev,
-                { ...newLink, id: crypto.randomUUID() },
+                { ...newLink, id: crypto.randomUUID() , isActive: newLink.isActive ?? true},
             ]);
             setAddOpen(false);
         },
         []
     );
-    //================ Link Change Handlers ==========================//
+    //================ username save Handlers ==========================//
+    const handleUsernameSaved = useCallback((newUsername: string) => {
+        setUsername(newUsername)
+    }, [])
+
 
     //====================== Handle URL Copy=========================//
     const handleCopyUrl = useCallback(async () => {
@@ -372,6 +448,8 @@ const DashboardPage:React.FC<DashboardPageProps> = ({
                         links={links}
                         onLinkChange={handleLinkChange}
                         onLinkDelete={handleLinkDelete}
+                        onaLinkToggleActive={handleLinkToggleActive}
+                        onLinksReorder={handleLinkReorder}
                         onAddOpen={() => setAddOpen(true)}
                         avatarName={initialProfile.name}
                         avatarSrc={initialProfile.avatarSrc || undefined}
@@ -380,12 +458,23 @@ const DashboardPage:React.FC<DashboardPageProps> = ({
                     />
                 );
                 case "/analytics": return <AnalyticsPanel />;
-                case "/settings": return <SettingsPanel />;
+                case "/settings": return (
+                    <SettingsPanel
+                        name={name}
+                        setName={setName}
+                        bio={bio}
+                        setBio={setBio}
+                        username={username}
+                        onUsernameSaved={handleUsernameSaved}
+                        userEmail={userEmail}
+                    />
+                );
                 case "/profile": return (
                     <ViewPanel
                         username={username}
                         links={links}
                         name={name}
+                        bio={bio}
                         avatarSrc={initialProfile.avatarSrc || undefined}
                     />
                 );
@@ -472,7 +561,7 @@ const DashboardPage:React.FC<DashboardPageProps> = ({
                             onCopy={handleCopyUrl}
                         />
                     {/*===============Publish Button========================*/}
-                        {activePath === '/dashboard' && (
+                        {(activePath === '/dashboard' || activePath === '/settings' )&& (
                             <Button
                                 variant={"primary"}
                                 size={"sm"}

@@ -22,7 +22,8 @@ import fresh from "@/public/Image/av-1.jpg"
 import Divider from "@/components/atomic/Divider";
 import StatusIndicator from "@/components/atomic/StatusIndicator";
 import Modal from "@/components/atomic/Modal";
-import AddLinkModal, {LinkRowData} from "@/components/molecular/AddLinkModal";
+import AddLinkModal from "@/components/molecular/AddLinkModal";
+import type { LinkRowData } from "@/types";
 import FormField from "@/components/molecular/Formfield";
 import EditableLinkRow from "@/components/molecular/EditableLinkRow";
 import NavLink from "@/components/molecular/NavLink";
@@ -46,8 +47,8 @@ const page = () => {
     const [openAddLink, setOpenAddLink] = useState(false)
     const [links, setLinks] = useState<LinkRowData[]>([])
     const [editableLinks, setEditableLinks] = useState<LinkRowData[]>([
-             { id: "1", title: "Portfolio", url: "https://alexrivers.design" },
-             { id: "2", title: "Youtube", url: "https://youtube.com/demi" },
+             { id: "1", title: "Portfolio", url: "https://alexrivers.design", isActive: true },
+             { id: "2", title: "Youtube", url: "https://youtube.com/demi", isActive: true },
        ]);
 
     const handleChange = (id: string, field: "title" | "url", value: string) => {

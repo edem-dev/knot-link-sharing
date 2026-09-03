@@ -6,6 +6,7 @@ import PublicProfilePage from "@/components/sectional/UserSectionals/PublicProfi
 
 
 
+
 //----- Cached data fetcher for the profile page -----//
 const getProfile = cache(async (username: string) => {
     const supabase = await createClient();
@@ -54,6 +55,17 @@ export default async function PublicProfile({params}: Props) {
     const profile = await getProfile(username)
 
     if (!profile) notFound()
+
+    const supabase = await createClient()
+    const {data: {user}} = await supabase.auth.getUser()
+
+    if (!user || user.id !== profile.id){
+        try {
+            await supabase.rpc("increment_profile_view", {profile_id_input:profile.id})
+        }catch (err){
+            console.error('Failed to increment profile view:', err)
+        }
+    }
 
     // ── Filter active links ────────────────────────────────────────────────────
     // RLS handles this for anonymous visitors automatically — but the owner

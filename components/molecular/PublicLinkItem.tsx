@@ -4,6 +4,7 @@ import {ArrowRight} from "lucide-react";
 export type PublicLinkVariant = "default" | "highlighted";
 
 export interface PublicLinkItemProps {
+    linkId?:string;
     variant?:PublicLinkVariant;
     icon?:React.ReactNode;
     href:string;
@@ -18,15 +19,28 @@ const PublicLinkItem:React.FC<PublicLinkItemProps> = ({
     icon,
     variant = "default",
     className = "",
+    linkId
 }) => {
 
     const isHighlighted = variant === "highlighted";
+
+    const handleClick = () =>{
+        fetch('/api/analytics/click',{
+            method:"POST",
+            headers: {"Content-Type": 'application/json'},
+            body:JSON.stringify({linkId}),
+            keepalive:true,
+        }).catch(()=>{
+
+        })
+    }
 
     return (
         <a
             href = {href}
             target={"_blank"}
             rel = {"noopener noreferrer"}
+            onClick={handleClick}
             className = {[
                 "flex items-center gap-2 w-full px-5 py-4 rounded-2xl",
                 "transition-all duration-200",

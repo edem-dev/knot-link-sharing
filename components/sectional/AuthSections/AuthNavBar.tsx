@@ -33,14 +33,14 @@ const AuthNavBar: React.FC<AuthNavBarProps> = ({
                 {mode === "sign-in" &&(
                     <div className={"flex items-center "}>
                         <Button variant={"ghost"} size={"sm"}>Developers</Button>
-                        <Button onClick={() => router.push("/sign-up")} variant={"dark"} size={"sm"}>Sign-Up</Button>
+                        <Button onClick={() => router.push("/signup")} variant={"dark"} size={"sm"}>Sign-Up</Button>
                     </div>
                 )}
                 {/*Sign-up mode render--------------------------------------r*/}
                 {mode === "sign-up" &&(
                     <div className={"flex items-center"}>
                         <Button variant={"ghost"} size={"sm"}>Developers</Button>
-                        <Button onClick={() => router.push("/sign-in")} variant={"dark"} size={"sm"}>Sign-In</Button>
+                        <Button onClick={() => router.push("/signin")} variant={"dark"} size={"sm"}>Sign-In</Button>
                     </div>
                 )}
                 {/*Onboarding mode render--------------------------------------r*/}
@@ -49,7 +49,7 @@ const AuthNavBar: React.FC<AuthNavBarProps> = ({
                         <Button variant={"ghost"} size={"sm"}>
                             Step {step} of {totalSteps}
                         </Button>
-                        <Button onClick={() => router.push("/sign-in")} variant={"dark"} size={"sm"}>Sign-Up</Button>
+                        <Button onClick={() => router.push("/signin")} variant={"dark"} size={"sm"}>Sign-Up</Button>
                     </div>
                 )}
             </nav>
